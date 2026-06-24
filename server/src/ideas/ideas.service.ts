@@ -1,0 +1,206 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '@/prisma/prisma.service';
+import { CreateIdeaDto } from './dto/create-idea.dto';
+import { SaveIdeaBoardDto } from './dto/save-idea-board.dto';
+@Injectable()
+export class IdeasService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(dto: CreateIdeaDto, userId: string) {
+    return this.prisma.idea.create({
+      data: {
+        title: dto.title,
+        shortDescription: dto.shortDescription,
+        coverImageUrl: dto.coverImageUrl,
+        status: 'NEW',
+        createdById: userId,
+        tags: {
+          connect: dto.tagIds.map((id) => ({ id })),
+        },
+        board: {
+          create: {},
+        },
+      },
+      include: {
+        createdBy: true,
+        tags: true,
+        board: true,
+      },
+    });
+  }
+
+  async findOne(id: string) {
+    return this.prisma.idea.findUnique({
+      where: { id },
+
+      include: {
+        createdBy: true,
+        tags: true,
+
+        board: {
+          include: {
+            stickers: {
+              include: {
+                author: true,
+                reactions: true,
+              },
+            },
+          },
+        },
+
+        comments: {
+          include: {
+            author: true,
+          },
+        },
+
+        summary: true,
+      },
+    });
+  }
+
+  async findAll(status?: string) {
+    return this.prisma.idea.findMany({
+      where: status
+        ? {
+            status: status as any,
+          }
+        : undefined,
+
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            username: true,
+            fullName: true,
+          },
+        },
+
+        tags: true,
+      },
+
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async saveBoard(id: string, dto: SaveIdeaBoardDto, userId: string) {
+    const idea = await this.prisma.idea.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!idea) {
+      throw new NotFoundException('Idea not found');
+    }
+
+    const board = await this.prisma.board.upsert({
+      where: { ideaId: id },
+      update: {},
+      create: { ideaId: id },
+      select: { id: true },
+    });
+
+    const notes = Array.isArray(dto.notes) ? dto.notes : [];
+    const funItems = Array.isArray(dto.funItems) ? dto.funItems : [];
+    const pinnedNoteIds = Array.isArray(dto.pinnedNoteIds)
+      ? dto.pinnedNoteIds
+      : [];
+
+    const stickers = [
+      ...notes.map((note) => ({
+        type: 'NOTE' as const,
+        content: JSON.stringify({ kind: 'note', note }),
+        x: getNumber(note, 'x'),
+        y: getNumber(note, 'y'),
+        width: getNullableNumber(note, 'width'),
+        height: getNullableNumber(note, 'height'),
+        color: getNullableString(note, 'color'),
+        isPinned: pinnedNoteIds.includes(getString(note, 'id')),
+        boardId: board.id,
+        authorId: userId,
+      })),
+      ...funItems.map((item) => ({
+        type: mapFunItemType(item),
+        content: JSON.stringify({ kind: 'fun', item }),
+        x: getNumber(item, 'x'),
+        y: getNumber(item, 'y'),
+        width: getNullableNumber(item, 'width'),
+        height: getNullableNumber(item, 'height'),
+        color: null,
+        isPinned: false,
+        boardId: board.id,
+        authorId: userId,
+      })),
+      {
+        type: 'TEXT' as const,
+        content: JSON.stringify({
+          kind: 'meta',
+          pinnedNoteIds,
+          summaryPreview: dto.summaryPreview ?? '',
+          postedDecisionId: dto.postedDecisionId ?? null,
+        }),
+        x: 0,
+        y: 0,
+        width: null,
+        height: null,
+        color: null,
+        isPinned: false,
+        boardId: board.id,
+        authorId: userId,
+      },
+    ];
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.sticker.deleteMany({ where: { boardId: board.id } });
+      if (stickers.length > 0) {
+        await tx.sticker.createMany({ data: stickers });
+      }
+    });
+
+    return { success: true };
+  }
+
+  async remove(id: string) {
+    const idea = await this.prisma.idea.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!idea) {
+      throw new NotFoundException('Idea not found');
+    }
+
+    await this.prisma.idea.delete({ where: { id } });
+  }
+}
+
+function mapFunItemType(item: unknown): 'EMOJI' | 'TEXT' | 'IMAGE' {
+  const kind = getString(item, 'kind');
+  if (kind === 'emoji') return 'EMOJI';
+  if (kind === 'text') return 'TEXT';
+  return 'IMAGE';
+}
+
+function getNumber(value: unknown, key: string): number {
+  if (!value || typeof value !== 'object') return 0;
+  const next = (value as Record<string, unknown>)[key];
+  return typeof next === 'number' ? next : 0;
+}
+
+function getNullableNumber(value: unknown, key: string): number | null {
+  if (!value || typeof value !== 'object') return null;
+  const next = (value as Record<string, unknown>)[key];
+  return typeof next === 'number' ? next : null;
+}
+
+function getString(value: unknown, key: string): string {
+  if (!value || typeof value !== 'object') return '';
+  const next = (value as Record<string, unknown>)[key];
+  return typeof next === 'string' ? next : '';
+}
+
+function getNullableString(value: unknown, key: string): string | null {
+  const next = getString(value, key);
+  return next || null;
+}
