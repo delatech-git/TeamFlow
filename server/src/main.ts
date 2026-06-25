@@ -7,10 +7,16 @@ async function bootstrap() {
   const allowedOrigins = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(',')
     : ['http://localhost:3000', 'http://localhost:3001'];
+  
+  
+    console.log('Allowed origins:', allowedOrigins);
+
+
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,
   });
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
