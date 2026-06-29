@@ -73,7 +73,6 @@ export function RecentIdeasClient({ initialIdeas }: Props) {
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)] sm:p-6">
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard icon={<Lightbulb size={16} />} label="Ideas Created" value={String(ideasCount)} delta="+12 this week" />
           <StatCard icon={<Users size={16} />} label="Active Collaborators" value={String(collaborators)} delta="+5 this week" />
@@ -81,33 +80,6 @@ export function RecentIdeasClient({ initialIdeas }: Props) {
           <StatCard icon={<Star size={16} />} label="Team Rating" value={teamRating} delta="+0.3 this week" />
         </div>
 
-        <aside className="rounded-2xl border border-slate-200 bg-[#fafbff] p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-900">Team Activity</h3>
-            <Link href="/discover-ideas" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700">
-              View all
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {activityIdeas.map((idea) => (
-              <div key={`activity-${idea.id}`} className="flex items-start gap-2.5">
-                <span className="mt-0.5 grid h-7 w-7 place-items-center rounded-full bg-indigo-100 text-[11px] font-bold text-indigo-700">
-                  {(idea.createdBy.fullName || idea.createdBy.username).slice(0, 1).toUpperCase()}
-                </span>
-                <div className="min-w-0">
-                  <p className="line-clamp-1 text-xs text-slate-700">
-                    <span className="font-semibold">{idea.createdBy.fullName || idea.createdBy.username}</span> updated{" "}
-                    <span className="font-medium">{idea.title}</span>
-                  </p>
-                  <p className="text-[11px] text-slate-400">{formatRelativeTime(idea.createdAt)}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </aside>
-      </div>
-
-      <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-2xl font-bold tracking-tight text-slate-900">Top Recent Ideas</h2>
@@ -141,15 +113,6 @@ export function RecentIdeasClient({ initialIdeas }: Props) {
                     <div className="absolute inset-0 bg-linear-to-b from-black/15 via-black/25 to-black/85" />
                     <div className="absolute bottom-0 left-0 right-0 p-3">
                       <p className="line-clamp-2 text-lg font-extrabold uppercase leading-tight text-white">{idea.title}</p>
-                      <div className="mt-2 flex items-center justify-between">
-                        <p className="text-[11px] text-white/75">Event Concept</p>
-                        <div className="flex items-center gap-1">
-                          <AvatarDot label={owner} />
-                          <AvatarDot label={owner} />
-                          <AvatarDot label={owner} />
-                          <span className="text-[11px] text-white/80">+1</span>
-                        </div>
-                      </div>
                     </div>
                   </div>
                   <div className="absolute right-2.5 top-2.5 flex gap-1.5">
@@ -174,7 +137,6 @@ export function RecentIdeasClient({ initialIdeas }: Props) {
           </div>
         </div>
       </div>
-    </div>
   );
 }
 

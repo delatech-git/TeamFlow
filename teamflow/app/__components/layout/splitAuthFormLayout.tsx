@@ -26,7 +26,7 @@ export function SplitAuthFormLayout({
 }: SplitAuthFormLayoutProps) {
   return (
     <section className="min-h-[calc(100dvh-5rem)] bg-neutral-950 pt-20 text-white">
-      <div className="grid min-h-inherit lg:grid-cols-2">
+      <div>
         <div className="relative min-h-[42vh] bg-black lg:min-h-inherit">
           <Image
             src={image}

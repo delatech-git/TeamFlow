@@ -260,7 +260,7 @@ export default function PlannedIdeasPage() {
                 {pinnedNotes.length > 0 ? (
                   <div className="mt-4">
                     <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Pinned notes used for summary</p>
-                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    <div className="mt-2 grid gap-2 sm:                   ">
                       {pinnedNotes.slice(0, 6).map((note) => (
                         <article key={note.id} className="rounded-lg border border-slate-700/30 bg-[#0b1628] p-2.5 text-xs text-slate-300">
                           <p className="line-clamp-3">{note.text || "Empty sticky note"}</p>
