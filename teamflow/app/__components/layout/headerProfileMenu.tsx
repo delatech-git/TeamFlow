@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { LogOut, UserRound } from "lucide-react";
+import { Camera, LogOut, UserRound } from "lucide-react";
 
 import { cn } from "../ui/utils";
 import {
   clearSession,
   fetchCurrentUser,
+  uploadMyAvatar,
 } from "@/src/infrastructure/api/auth/client";
 import type { MeUser } from "@/src/infrastructure/api/auth/types";
 import { getAccessToken } from "@/src/infrastructure/auth/session";
@@ -16,10 +17,14 @@ import { getAccessToken } from "@/src/infrastructure/auth/session";
 export function HeaderProfileMenu() {
   const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [hasSession, setHasSession] = useState(false);
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<MeUser | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState("");
 
   useEffect(() => {
     setHasSession(Boolean(getAccessToken()));
@@ -27,7 +32,9 @@ export function HeaderProfileMenu() {
 
   useEffect(() => {
     if (!hasSession) return;
+
     let cancelled = false;
+
     (async () => {
       try {
         const me = await fetchCurrentUser();
@@ -41,6 +48,7 @@ export function HeaderProfileMenu() {
         }
       }
     })();
+
     return () => {
       cancelled = true;
     };
@@ -48,14 +56,18 @@ export function HeaderProfileMenu() {
 
   useEffect(() => {
     if (!open) return;
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
+
     const onPointer = (e: MouseEvent) => {
       if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
     };
+
     document.addEventListener("keydown", onKey);
     document.addEventListener("mousedown", onPointer);
+
     return () => {
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("mousedown", onPointer);
@@ -71,11 +83,50 @@ export function HeaderProfileMenu() {
     router.refresh();
   }
 
-  if (!hasSession) {
-    return null;
+  async function onAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    setAvatarError("");
+
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Please choose an image file.");
+      return;
+    }
+
+    const maxSize = 2 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+      setAvatarError("Image must be smaller than 2MB.");
+      return;
+    }
+
+    setUploadingAvatar(true);
+
+    try {
+      const updatedUser = await uploadMyAvatar(file);
+
+      setUser((currentUser) =>
+        currentUser
+          ? {
+              ...currentUser,
+              avatarUrl: updatedUser.avatarUrl,
+            }
+          : updatedUser,
+      );
+
+      e.target.value = "";
+    } catch (err) {
+      setAvatarError(
+        err instanceof Error ? err.message : "Could not update profile image",
+      );
+    } finally {
+      setUploadingAvatar(false);
+    }
   }
 
-  if (loadError) {
+  if (!hasSession || loadError) {
     return null;
   }
 
@@ -123,11 +174,59 @@ export function HeaderProfileMenu() {
 
       {open ? (
         <div
-          className="absolute right-0 top-full z-60 mt-2 w-64 rounded-2xl border border-slate-200/90 bg-white p-4 text-left shadow-xl"
+          className="absolute right-0 top-full z-60 mt-2 w-72 rounded-2xl border border-slate-200/90 bg-white p-4 text-left shadow-xl"
           role="menu"
         >
-          <p className="text-sm font-semibold text-slate-900">{displayName}</p>
-          <p className="mt-0.5 truncate text-xs text-slate-500">{user.email}</p>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingAvatar}
+              className="group relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              aria-label={showAvatar ? "Change profile image" : "Upload profile image"}
+            >
+              {showAvatar ? (
+                <Image
+                  src={user.avatarUrl!}
+                  alt=""
+                  width={48}
+                  height={48}
+                  className="h-full w-full object-cover"
+                  unoptimized
+                />
+              ) : (
+                <UserRound size={22} className="text-slate-500" aria-hidden />
+              )}
+
+              <span className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition group-hover:opacity-100">
+                <Camera size={17} className="text-white" aria-hidden />
+              </span>
+            </button>
+
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-slate-900">
+                {displayName}
+              </p>
+              <p className="mt-0.5 truncate text-xs text-slate-500">
+                {user.email}
+              </p>
+            </div>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="hidden"
+            onChange={onAvatarChange}
+          />
+
+          {avatarError ? (
+            <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+              {avatarError}
+            </p>
+          ) : null}
+
           <button
             type="button"
             role="menuitem"

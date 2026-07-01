@@ -11,6 +11,8 @@ import type {
 
 export type { CreateIdeaBody, IdeaCommentDto, IdeaResponseDto };
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export async function getIdeas(
   status?: string,
 ): Promise<IdeaResponseDto[]> {
@@ -23,17 +25,55 @@ export async function createIdea(
   body: CreateIdeaBody,
 ): Promise<IdeaResponseDto> {
   const token = getAccessToken();
+
   if (!token) {
     throw new Error("Not authenticated");
   }
-  return proxyPostJson<IdeaResponseDto, CreateIdeaBody>(
-    ideasCreatePath(),
-    body,
-    {
-      errorMessage: "Could not create idea",
-      init: { headers: { Authorization: `Bearer ${token}` } },
+
+  const formData = new FormData();
+
+  formData.append("title", body.title);
+  formData.append("shortDescription", body.shortDescription);
+  formData.append("tagIds", JSON.stringify(body.tagIds ?? []));
+
+  if (body.coverImageFile) {
+    formData.append("coverImage", body.coverImageFile);
+  }
+
+  const response = await fetch(`${API_URL}/ideas`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
     },
-  );
+    body: formData,
+  });
+
+  const rawText = await response.text();
+
+  let result: unknown = null;
+
+  try {
+    result = rawText ? JSON.parse(rawText) : null;
+  } catch {
+    result = null;
+  }
+
+  if (!response.ok) {
+    const message =
+      typeof result === "object" &&
+      result !== null &&
+      "message" in result
+        ? (result as { message?: string | string[] }).message
+        : null;
+
+    throw new Error(
+      Array.isArray(message)
+        ? message.join(", ")
+        : message || rawText || "Could not create idea",
+    );
+  }
+
+  return result as IdeaResponseDto;
 }
 
 export async function getIdeaById(id: string): Promise<IdeaResponseDto> {

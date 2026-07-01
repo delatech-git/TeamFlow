@@ -10,9 +10,15 @@ import {
   Put,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipeBuilder,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+
 import { IdeasService } from './ideas.service';
-import { CreateIdeaDto } from './dto/create-idea.dto';
+import { CreateIdeaMultipartDto } from './dto/createIdeaMultipartDto';
 import { SaveIdeaBoardDto } from './dto/save-idea-board.dto';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth-guard';
 import {
@@ -36,8 +42,40 @@ export class IdeasController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  create(@Body() dto: CreateIdeaDto, @CurrentUser() user: CurrentUserPayload) {
-    return this.ideasService.create(dto, user.id);
+  @UseInterceptors(
+    FileInterceptor('coverImage', {
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
+  create(
+    @Body() dto: CreateIdeaMultipartDto,
+    @CurrentUser() user: CurrentUserPayload,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: /(jpg|jpeg|png|webp)$/i,
+        })
+        .addMaxSizeValidator({
+          maxSize: 5 * 1024 * 1024,
+        })
+        .build({
+          fileIsRequired: false,
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        }),
+    )
+    coverImage?: Express.Multer.File,
+  ) {
+    return this.ideasService.create(
+      {
+        title: dto.title,
+        shortDescription: dto.shortDescription,
+        tagIds: parseTagIds(dto.tagIds),
+      },
+      user.id,
+      coverImage,
+    );
   }
 
   @Put(':id/board')
@@ -55,5 +93,21 @@ export class IdeasController {
   @UseGuards(JwtAuthGuard)
   remove(@Param('id') id: string) {
     return this.ideasService.remove(id);
+  }
+}
+
+function parseTagIds(value: string | undefined): string[] {
+  if (!value) return [];
+
+  try {
+    const parsed = JSON.parse(value);
+
+    if (!Array.isArray(parsed)) {
+      throw new BadRequestException('tagIds must be an array');
+    }
+
+    return parsed.filter((id): id is string => typeof id === 'string');
+  } catch {
+    throw new BadRequestException('Invalid tagIds format');
   }
 }
