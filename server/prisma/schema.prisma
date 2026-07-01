@@ -39,8 +39,9 @@ model User {
   passwordHash String
   fullName     String?
   avatarUrl    String?
+  avatarPublicId String?
   role         Role    @default(USER)
-
+  
   ideas     Idea[]
   stickers  Sticker[]
   comments  Comment[]

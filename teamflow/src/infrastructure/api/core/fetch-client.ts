@@ -104,3 +104,33 @@ export async function proxyDelete(
     );
   }
 }
+
+export async function proxyPostFormData<TResponse>(
+  proxyPath: string,
+  formData: FormData,
+  options?: { errorMessage?: string; init?: RequestInit },
+): Promise<TResponse> {
+  const extraInit = options?.init;
+
+  const headers = new Headers(extraInit?.headers);
+
+  // Important: never set Content-Type manually for FormData.
+  // The browser must add the multipart boundary.
+  headers.delete("Content-Type");
+
+  const res = await proxyFetch(proxyPath, {
+    ...extraInit,
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const parsed = await getErrorMessageFromResponse(res);
+    throw new Error(
+      parsed || options?.errorMessage || `Request failed (${res.status})`,
+    );
+  }
+
+  return res.json();
+}

@@ -16,60 +16,12 @@ type Props = {
 };
 
 export function RecentIdeasClient({ initialIdeas }: Props) {
-  const [ideas, setIdeas] = useState(initialIdeas);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [canDelete, setCanDelete] = useState(false);
 
-  useEffect(() => {
-    if (!getAccessToken()) {
-      setCanDelete(false);
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      try {
-        await fetchCurrentUser();
-        if (!cancelled) setCanDelete(true);
-      } catch {
-        if (!cancelled) setCanDelete(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  async function onDeleteIdea(id: string) {
-    if (
-      !window.confirm(
-        "Delete this idea for everyone? This cannot be undone.",
-      )
-    ) {
-      return;
-    }
-    setDeletingId(id);
-    try {
-      await deleteIdea(id);
-      setIdeas((prev) => prev.filter((i) => i.id !== id));
-    } catch (e) {
-      window.alert(
-        e instanceof Error ? e.message : "Could not delete this idea.",
-      );
-    } finally {
-      setDeletingId(null);
-    }
-  }
-
-  if (ideas.length === 0) {
-    return null;
-  }
-
-  const topIdeas = ideas.slice(0, 3);
-  const ideasCount = ideas.length;
-  const collaborators = new Set(ideas.map((idea) => idea.createdBy.id)).size;
-  const plannedCount = ideas.filter((idea) => idea.status === "PLANNED").length;
-  const teamRating = ideas.length > 0 ? "4.8" : "0.0";
-  const activityIdeas = ideas.slice(0, 4);
+  const topIdeas = initialIdeas.slice(0, 3);
+  const ideasCount = initialIdeas.length;
+  const collaborators = new Set(initialIdeas.map((idea) => idea.createdBy.id)).size;
+  const plannedCount = initialIdeas.filter((idea) => idea.status === "PLANNED").length;
+  const teamRating = initialIdeas.length > 0 ? "4.8" : "0.0";
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)] sm:p-6">
@@ -80,7 +32,7 @@ export function RecentIdeasClient({ initialIdeas }: Props) {
           <StatCard icon={<Star size={16} />} label="Team Rating" value={teamRating} delta="+0.3 this week" />
         </div>
 
-        <div>
+        <div className="mt-6">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-2xl font-bold tracking-tight text-slate-900">Top Recent Ideas</h2>
             <Link href="/discover-ideas" className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-700">
@@ -119,16 +71,8 @@ export function RecentIdeasClient({ initialIdeas }: Props) {
                     <span className="rounded-full border border-white/35 bg-black/50 px-2 py-0.5 text-[10px] font-semibold text-white/90">
                       {idea.status}
                     </span>
-                    {canDelete ? (
-                      <button
-                        type="button"
-                        disabled={deletingId === idea.id}
-                        onClick={() => void onDeleteIdea(idea.id)}
-                        className="rounded-full border border-red-300/50 bg-red-950/70 px-2 py-0.5 text-[10px] font-semibold text-red-100 disabled:opacity-50"
-                      >
-                        Del
-                      </button>
-                    ) : null}
+                  </div>
+                  <div className="absolute bottom-2.5 right-2.5">
                   </div>
                   <Link href={`/dashboard/ideas/${idea.id}`} className="absolute inset-0" aria-label={`Open ${idea.title}`} />
                 </article>
