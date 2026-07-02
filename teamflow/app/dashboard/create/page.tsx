@@ -24,7 +24,7 @@ export default function CreateIdeaPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [shortDescription, setShortDescription] = useState("");
-  const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [tags, setTags] = useState<TagDto[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<Set<string>>(
     () => new Set(),
@@ -57,11 +57,10 @@ export default function CreateIdeaPage() {
     setError("");
     setLoading(true);
     try {
-      const cover = coverImageUrl.trim();
       await createIdea({
         title: title.trim(),
         shortDescription: shortDescription.trim(),
-        ...(cover ? { coverImageUrl: cover } : {}),
+        coverImageFile,
         tagIds: Array.from(selectedTagIds),
       });
       router.push("/dashboard");
@@ -137,14 +136,15 @@ export default function CreateIdeaPage() {
 
         <Input
           id="create-idea-cover"
-          name="coverImageUrl"
-          label="Cover image URL (optional)"
-          type="url"
-          inputMode="url"
-          autoComplete="off"
+          name="coverImage"
+          label="Cover image"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
           variant="authDark"
-          value={coverImageUrl}
-          onChange={(e) => setCoverImageUrl(e.target.value)}
+          onChange={(e) => {
+            const file = e.target.files?.[0] ?? null;
+            setCoverImageFile(file);
+          }}
           disabled={loading}
         />
 

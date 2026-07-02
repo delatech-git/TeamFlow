@@ -9,13 +9,14 @@ import { AuthHeroLayout } from "@/app/__components/layout/authHeroLayout";
 import { Button } from "@/app/__components/ui/button";
 import { Input } from "@/app/__components/ui/input";
 import loginImage from "@/assets/loginImage.png";
-import { registerAndSignIn } from "@/src/infrastructure/api/auth/client";
 import { getAccessToken } from "@/src/infrastructure/auth/session";
+import { registerAndSignIn} from "@/src/shared/helpers/RegisterAndSignIn";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -27,31 +28,34 @@ export default function RegisterPage() {
     }
   }, [router]);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
+async function onSubmit(e: React.FormEvent) {
+  e.preventDefault();
+  setError("");
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await registerAndSignIn({
-        username: username.trim(),
-        email: email.trim(),
-        fullName: fullName.trim(),
-        password,
-      });
-      router.push("/dashboard");
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
+  if (!avatarFile) {
+    setError("Please upload an avatar.");
+    return;
   }
+
+  setLoading(true);
+console.log(avatarFile,"avatar File");
+  try {
+    await registerAndSignIn({
+      username: username.trim(),
+      email: email.trim(),
+      fullName: fullName.trim(),
+      password,
+      avatarFile,
+    });
+
+    router.push("/dashboard");
+    router.refresh();
+  } catch (err) {
+    setError(err instanceof Error ? err.message : "Something went wrong");
+  } finally {
+    setLoading(false);
+  }
+}
 
   return (
     <AuthHeroLayout
@@ -136,7 +140,19 @@ export default function RegisterPage() {
           minLength={6}
           disabled={loading}
         />
-
+        <Input
+          id="register-avatar"
+          name="avatar"
+          label="Profile image"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          variant="authDark"
+          onChange={(e) => {
+            const file = e.target.files?.[0] ?? null;
+            setAvatarFile(file);
+          }}
+          disabled={loading}
+        />
         <Button
           type="submit"
           rounded

@@ -1,7 +1,7 @@
 export type CreateIdeaBody = {
   title: string;
   shortDescription: string;
-  coverImageUrl?: string;
+  coverImageFile?: File | null;
   tagIds: string[];
 };
 

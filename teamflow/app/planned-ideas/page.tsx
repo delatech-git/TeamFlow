@@ -162,7 +162,7 @@ export default function PlannedIdeasPage() {
 
   return (
     <section className="min-h-screen bg-[#050b16] px-4 pb-8 pt-25 text-slate-100 sm:px-6 lg:px-8">
-      <div className="mx-auto mb-4 flex max-w-[1700px] items-center justify-between gap-3 rounded-2xl border border-cyan-400/10 bg-[#0b1424] px-4 py-3">
+      <div className="mx-auto mb-4 flex max-w-425 items-center justify-between gap-3 rounded-2xl border border-cyan-400/10 bg-[#0b1424] px-4 py-3">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-cyan-300/80">TeamTide</p>
           <h1 className="mt-1 text-lg font-semibold text-white">Planned Ideas</h1>
@@ -172,7 +172,7 @@ export default function PlannedIdeasPage() {
           Search ideas, events, people...
         </div>
       </div>
-      <div className="mx-auto grid max-w-[1700px] gap-4 lg:grid-cols-[320px_minmax(0,1fr)_340px]">
+      <div className="mx-auto grid max-w-425 gap-4 lg:grid-cols-[320px_minmax(0,1fr)_340px]">
         <aside className="rounded-2xl border border-cyan-400/10 bg-[#0b1424] p-3 shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
           <div className="flex items-center justify-between gap-3 border-b border-slate-700/40 pb-3">
             <div>
@@ -260,7 +260,7 @@ export default function PlannedIdeasPage() {
                 {pinnedNotes.length > 0 ? (
                   <div className="mt-4">
                     <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Pinned notes used for summary</p>
-                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    <div className="mt-2 grid gap-2 sm:                   ">
                       {pinnedNotes.slice(0, 6).map((note) => (
                         <article key={note.id} className="rounded-lg border border-slate-700/30 bg-[#0b1628] p-2.5 text-xs text-slate-300">
                           <p className="line-clamp-3">{note.text || "Empty sticky note"}</p>
@@ -286,7 +286,7 @@ export default function PlannedIdeasPage() {
               value={commentDraft}
               onChange={(event) => setCommentDraft(event.target.value)}
               placeholder="Write a comment..."
-              className="mt-2 min-h-[84px] w-full resize-none rounded-xl border border-slate-700/50 bg-[#081120] px-3 py-2 text-sm text-slate-200 outline-none placeholder:text-slate-500"
+              className="mt-2 min-h-21 w-full resize-none rounded-xl border border-slate-700/50 bg-[#081120] px-3 py-2 text-sm text-slate-200 outline-none placeholder:text-slate-500"
             />
             <button
               type="button"

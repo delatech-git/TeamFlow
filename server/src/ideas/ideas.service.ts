@@ -2,31 +2,51 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { CreateIdeaDto } from './dto/create-idea.dto';
 import { SaveIdeaBoardDto } from './dto/save-idea-board.dto';
+import { CloudinaryService } from '@/cloudinary/cloudinary.service';
 @Injectable()
 export class IdeasService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+   private readonly prisma: PrismaService,
+    private readonly cloudinaryService: CloudinaryService,
+) {}
 
-  async create(dto: CreateIdeaDto, userId: string) {
-    return this.prisma.idea.create({
-      data: {
-        title: dto.title,
-        shortDescription: dto.shortDescription,
-        coverImageUrl: dto.coverImageUrl,
-        status: 'NEW',
-        createdById: userId,
-        tags: {
-          connect: dto.tagIds.map((id) => ({ id })),
+  async create(
+    dto: CreateIdeaDto,
+    userId: string,
+    coverImage?: Express.Multer.File,
+  ) {
+    const uploadedCover = coverImage
+      ? await this.cloudinaryService.uploadIdeaCover(coverImage)
+      : null;
+
+    try {
+      return await this.prisma.idea.create({
+        data: {
+          title: dto.title,
+          shortDescription: dto.shortDescription,
+          coverImageUrl: uploadedCover?.secure_url ?? null,
+          status: 'NEW',
+          createdById: userId,
+          tags: {
+            connect: dto.tagIds.map((id) => ({ id })),
+          },
+          board: {
+            create: {},
+          },
         },
-        board: {
-          create: {},
+        include: {
+          createdBy: true,
+          tags: true,
+          board: true,
         },
-      },
-      include: {
-        createdBy: true,
-        tags: true,
-        board: true,
-      },
-    });
+      });
+    } catch (error) {
+      if (uploadedCover?.public_id) {
+        await this.cloudinaryService.deleteImage(uploadedCover.public_id);
+      }
+
+      throw error;
+    }
   }
 
   async findOne(id: string) {

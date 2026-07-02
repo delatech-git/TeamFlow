@@ -5,24 +5,20 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
+import { CloudinaryService } from '@/cloudinary/cloudinary.service';
 
 @Module({
   imports: [
     PassportModule,
-
     JwtModule.register({
       secret: process.env.JWT_SECRET ?? 'dev-secret',
-
       signOptions: {
         expiresIn: '7d',
       },
     }),
   ],
-
   controllers: [AuthController],
-
-  providers: [AuthService, JwtStrategy],
-
+  providers: [AuthService, JwtStrategy, CloudinaryService],
   exports: [JwtModule],
 })
 export class AuthModule {}

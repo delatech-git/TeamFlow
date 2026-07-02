@@ -1,4 +1,4 @@
-import { proxyGetJson, proxyPostJson } from "../core/fetch-client";
+import { proxyGetJson, proxyPostJson, proxyPostFormData  } from "../core/fetch-client";
 import { authLoginPath, authMePath, authRegisterPath } from "./paths";
 import type {
   AuthUser,
@@ -17,6 +17,9 @@ export type {
   MeUser,
   RegisterBody,
   RegisterResponse,
+};
+export type RegisterWithAvatarBody = RegisterBody & {
+  avatarFile: File;
 };
 
 /** Sign in and persist JWT for later API calls. */
@@ -43,15 +46,27 @@ export async function registerAccount(
   );
 }
 
-/** Register then sign in with the same credentials. */
+/** Register with avatar in one request and persist JWT. */
 export async function registerAndSignIn(
-  body: RegisterBody,
+  body: RegisterWithAvatarBody,
 ): Promise<LoginResponse> {
-  await registerAccount(body);
-  return loginWithPassword({
-    username: body.username,
-    password: body.password,
-  });
+  const formData = new FormData();
+
+  formData.append("username", body.username);
+  formData.append("email", body.email);
+  formData.append("fullName", body.fullName);
+  formData.append("password", body.password);
+  formData.append("avatar", body.avatarFile);
+
+  const data = await proxyPostFormData<LoginResponse>(
+    authRegisterPath(),
+    formData,
+    { errorMessage: "Could not create account" },
+  );
+
+  setAccessToken(data.accessToken);
+
+  return data;
 }
 
 /** Current user from JWT (`Authorization: Bearer`). */
@@ -69,4 +84,35 @@ export async function fetchCurrentUser(): Promise<MeUser> {
 /** Clear stored session (client). */
 export function clearSession(): void {
   clearAccessToken();
+}
+
+
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+console.log("API_URL:", API_URL);
+
+export async function uploadMyAvatar(file: File) {
+  const token = getAccessToken();
+
+  if (!token) {
+    throw new Error('You must be logged in to upload an avatar.');
+  }
+
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  const response = await fetch(`${API_URL}/auth/me/avatar`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.message ?? 'Avatar upload failed');
+  }
+
+  return response.json();
 }
