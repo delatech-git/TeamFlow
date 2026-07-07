@@ -13,16 +13,29 @@ export type IdeaResponseDto = {
   status: string;
   createdAt: string;
   updatedAt?: string;
+
   createdBy: {
     id: string;
     username: string;
     fullName?: string | null;
   };
+
   tags: {
     id: string;
     name: string;
     color?: string | null;
   }[];
+
+  plannedGuide?: {
+    id: string;
+    summary: string;
+    decisionsJson?: unknown | null;
+    ideaId: string;
+    createdById: string;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
+
   board?: {
     id: string;
     stickers: {
@@ -37,6 +50,7 @@ export type IdeaResponseDto = {
       isPinned: boolean;
     }[];
   } | null;
+
   comments?: IdeaCommentDto[];
 };
 

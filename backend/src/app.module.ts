@@ -11,7 +11,7 @@ import { CommentsModule } from './comments/comments.module';
 import { ReactionsModule } from './reactions/reactions.module';
 import { AiModule } from './ai/ai.module';
 import { RolesModule } from './roles/roles.module';
-import { MediaModule } from './media/media.module';
+
 import { CommonModule } from './common/common.module';
 import { ConfigModule } from './config/config.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -28,7 +28,6 @@ import { PrismaModule } from './prisma/prisma.module';
     ReactionsModule,
     AiModule,
     RolesModule,
-    MediaModule,
     CommonModule,
     ConfigModule,
     PrismaModule,

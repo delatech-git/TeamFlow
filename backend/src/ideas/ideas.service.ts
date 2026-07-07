@@ -6,9 +6,9 @@ import { CloudinaryService } from '@/cloudinary/cloudinary.service';
 @Injectable()
 export class IdeasService {
   constructor(
-   private readonly prisma: PrismaService,
+    private readonly prisma: PrismaService,
     private readonly cloudinaryService: CloudinaryService,
-) {}
+  ) {}
 
   async create(
     dto: CreateIdeaDto,
@@ -57,6 +57,8 @@ export class IdeasService {
         createdBy: true,
         tags: true,
 
+        plannedGuide: true,
+
         board: {
           include: {
             stickers: {
@@ -73,8 +75,6 @@ export class IdeasService {
             author: true,
           },
         },
-
-        summary: true,
       },
     });
   }
@@ -97,6 +97,7 @@ export class IdeasService {
         },
 
         tags: true,
+        plannedGuide: true,
       },
 
       orderBy: {

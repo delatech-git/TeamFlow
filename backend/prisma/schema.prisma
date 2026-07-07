@@ -33,22 +33,23 @@ enum StickerType {
 }
 
 model User {
-  id           String  @id @default(uuid())
-  username     String  @unique
-  email        String  @unique
-  passwordHash String
-  fullName     String?
-  avatarUrl    String?
-  avatarPublicId String?
-  role         Role    @default(USER)
-  
-  ideas     Idea[]
-  stickers  Sticker[]
-  comments  Comment[]
-  reactions Reaction[]
+  id              String  @id @default(uuid())
+  username        String  @unique
+  email           String  @unique
+  passwordHash    String
+  fullName        String?
+  avatarUrl       String?
+  avatarPublicId  String?
+  role            Role    @default(USER)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  ideas           Idea[]
+  stickers        Sticker[]
+  comments        Comment[]
+  reactions       Reaction[]
+  planSummaries   PlanSummary[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model Tag {
@@ -76,7 +77,23 @@ model Idea {
   tags     Tag[]
   board    Board?
   comments Comment[]
-  summary  PlanSummary?
+
+  plannedGuide PlanSummary?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PlanSummary {
+  id            String @id @default(uuid())
+  summary       String
+  decisionsJson Json?
+
+  ideaId String @unique
+  idea   Idea   @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -147,14 +164,4 @@ model Comment {
   updatedAt DateTime @updatedAt
 }
 
-model PlanSummary {
-  id            String @id @default(uuid())
-  summary       String
-  decisionsJson Json?
 
-  ideaId String @unique
-  idea   Idea   @relation(fields: [ideaId], references: [id], onDelete: Cascade)
-
-  createdById String
-  createdAt   DateTime @default(now())
-}
