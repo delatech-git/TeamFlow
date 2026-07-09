@@ -74,6 +74,11 @@ export class IdeasService {
           },
         },
 
+        photos: {
+          include: { uploadedBy: true },
+          orderBy: { createdAt: 'desc' },
+        },
+
         summary: true,
       },
     });
@@ -179,6 +184,50 @@ export class IdeasService {
     });
 
     return { success: true };
+  }
+
+  async addPhoto(ideaId: string, file: Express.Multer.File, userId: string) {
+    const idea = await this.prisma.idea.findUnique({
+      where: { id: ideaId },
+      select: { id: true },
+    });
+    if (!idea) {
+      throw new NotFoundException('Idea not found');
+    }
+
+    const uploaded = await this.cloudinaryService.uploadIdeaMoment(file);
+
+    return this.prisma.ideaPhoto.create({
+      data: {
+        ideaId,
+        uploadedById: userId,
+        url: uploaded.secure_url,
+        publicId: uploaded.public_id,
+      },
+      include: {
+        uploadedBy: true,
+      },
+    });
+  }
+
+  async findPhotos(ideaId: string) {
+    return this.prisma.ideaPhoto.findMany({
+      where: { ideaId },
+      include: { uploadedBy: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async removePhoto(ideaId: string, photoId: string) {
+    const photo = await this.prisma.ideaPhoto.findFirst({
+      where: { id: photoId, ideaId },
+    });
+    if (!photo) {
+      throw new NotFoundException('Photo not found');
+    }
+
+    await this.prisma.ideaPhoto.delete({ where: { id: photoId } });
+    await this.cloudinaryService.deleteImage(photo.publicId);
   }
 
   async remove(id: string) {

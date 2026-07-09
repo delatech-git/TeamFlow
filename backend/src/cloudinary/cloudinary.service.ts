@@ -24,6 +24,14 @@ export class CloudinaryService {
     );
   }
 
+  async uploadIdeaMoment(file: Express.Multer.File): Promise<UploadApiResponse> {
+    return this.uploadImage(
+      file,
+      'teamtide/idea-moments',
+      'Moment photo upload failed',
+    );
+  }
+
   private async uploadImage(
     file: Express.Multer.File,
     folder: string,

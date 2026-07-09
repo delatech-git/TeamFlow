@@ -94,6 +94,48 @@ export class IdeasController {
   remove(@Param('id') id: string) {
     return this.ideasService.remove(id);
   }
+
+  @Get(':id/photos')
+  findPhotos(@Param('id') id: string) {
+    return this.ideasService.findPhotos(id);
+  }
+
+  @Post(':id/photos')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('photo', {
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
+  addPhoto(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserPayload,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: /(jpg|jpeg|png|webp)$/i,
+        })
+        .addMaxSizeValidator({
+          maxSize: 5 * 1024 * 1024,
+        })
+        .build({
+          fileIsRequired: true,
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        }),
+    )
+    photo: Express.Multer.File,
+  ) {
+    return this.ideasService.addPhoto(id, photo, user.id);
+  }
+
+  @Delete(':id/photos/:photoId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
+  removePhoto(@Param('id') id: string, @Param('photoId') photoId: string) {
+    return this.ideasService.removePhoto(id, photoId);
+  }
 }
 
 function parseTagIds(value: string | undefined): string[] {
