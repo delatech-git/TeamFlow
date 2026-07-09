@@ -47,6 +47,7 @@ model User {
   comments        Comment[]
   reactions       Reaction[]
   planSummaries   PlanSummary[]
+  teamPhotos      TeamPhoto[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -74,9 +75,10 @@ model Idea {
   createdById String
   createdBy   User   @relation(fields: [createdById], references: [id])
 
-  tags     Tag[]
-  board    Board?
-  comments Comment[]
+  tags       Tag[]
+  board      Board?
+  comments   Comment[]
+  teamPhotos TeamPhoto[]
 
   plannedGuide PlanSummary?
 
@@ -162,6 +164,21 @@ model Comment {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model TeamPhoto {
+  id            String  @id @default(uuid())
+  imageUrl      String
+  imagePublicId String?
+  caption       String?
+
+  ideaId String
+  idea   Idea   @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+
+  uploadedById String
+  uploadedBy   User   @relation(fields: [uploadedById], references: [id])
+
+  createdAt DateTime @default(now())
 }
 
 

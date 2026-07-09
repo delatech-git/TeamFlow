@@ -52,6 +52,21 @@ export type IdeaResponseDto = {
   } | null;
 
   comments?: IdeaCommentDto[];
+
+  teamPhotos?: TeamPhotoDto[];
+};
+
+export type TeamPhotoDto = {
+  id: string;
+  imageUrl: string;
+  caption?: string | null;
+  createdAt: string;
+  uploadedBy: {
+    id: string;
+    username: string;
+    fullName?: string | null;
+    avatarUrl?: string | null;
+  };
 };
 
 export type SaveIdeaBoardBody = {

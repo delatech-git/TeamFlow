@@ -56,7 +56,7 @@ export default function FunDashboard({
 
   return (
     <aside
-      className="tf-board-right-panel tf-board-tools-panel fixed bottom-4 right-4 top-28 z-30 hidden w-[304px] overflow-y-auto p-3.5 lg:block"
+      className="tf-board-right-panel tf-board-tools-panel fixed bottom-4 right-4 top-28 z-30 hidden w-76 overflow-y-auto p-3.5 lg:block"
       style={{ animationDelay: "90ms" }}
     >
       <div className="space-y-2">

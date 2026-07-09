@@ -75,8 +75,46 @@ export class IdeasService {
             author: true,
           },
         },
+
+        teamPhotos: {
+          include: {
+            uploadedBy: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
       },
     });
+  }
+
+  async addTeamPhoto(ideaId: string, userId: string, photo: Express.Multer.File) {
+    const idea = await this.prisma.idea.findUnique({
+      where: { id: ideaId },
+      select: { id: true },
+    });
+    if (!idea) {
+      throw new NotFoundException('Idea not found');
+    }
+
+    const uploaded = await this.cloudinaryService.uploadTeamPhoto(photo);
+
+    try {
+      return await this.prisma.teamPhoto.create({
+        data: {
+          imageUrl: uploaded.secure_url,
+          imagePublicId: uploaded.public_id,
+          ideaId,
+          uploadedById: userId,
+        },
+        include: {
+          uploadedBy: true,
+        },
+      });
+    } catch (error) {
+      await this.cloudinaryService.deleteImage(uploaded.public_id);
+      throw error;
+    }
   }
 
   async findAll(status?: string) {

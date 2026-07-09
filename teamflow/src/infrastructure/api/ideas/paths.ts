@@ -19,3 +19,7 @@ export function ideasBoardPath(id: string): string {
 export function ideaCommentsPath(id: string): string {
   return buildProxyPath(["ideas", id, "comments"]);
 }
+
+export function ideaTeamPhotosPath(id: string): string {
+  return buildProxyPath(["ideas", id, "team-photos"]);
+}

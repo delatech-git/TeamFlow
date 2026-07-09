@@ -11,13 +11,16 @@ import {
   Users,
 } from "lucide-react";
 import {
+  addTeamPhoto,
   createIdeaComment,
   getIdeaById,
   getIdeaComments,
   getIdeas,
   type IdeaCommentDto,
   type IdeaResponseDto,
+  type TeamPhotoDto,
 } from "@/src/infrastructure/api/ideas/client";
+import { Camera } from "lucide-react";
 import { ideaResponseToDiscoverIdea } from "@/src/entities/models/discover";
 import { getAccessToken } from "@/src/infrastructure/auth/session";
 
@@ -62,6 +65,8 @@ export default function PlannedIdeasPage() {
   const [comments, setComments] = useState<IdeaCommentDto[]>([]);
   const [commentDraft, setCommentDraft] = useState("");
   const [postingComment, setPostingComment] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -158,6 +163,50 @@ export default function PlannedIdeasPage() {
       .map((section) => section.trim())
       .filter(Boolean);
   }, [selectedIdeaView?.summary]);
+
+  const teamPhotos: TeamPhotoDto[] = selectedIdeaDetails?.teamPhotos ?? [];
+
+  const handleTeamPhotoUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !selectedIdeaId) return;
+
+    setPhotoError("");
+
+    if (!file.type.startsWith("image/")) {
+      setPhotoError("Please choose an image file.");
+      return;
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setPhotoError("Image must be smaller than 5MB.");
+      return;
+    }
+
+    if (!getAccessToken()) {
+      window.alert("Please log in to upload a team photo.");
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const uploaded = await addTeamPhoto(selectedIdeaId, file);
+      setSelectedIdeaDetails((prev) =>
+        prev
+          ? { ...prev, teamPhotos: [uploaded, ...(prev.teamPhotos ?? [])] }
+          : prev,
+      );
+    } catch (err) {
+      setPhotoError(
+        err instanceof Error ? err.message : "Could not upload photo.",
+      );
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   const handlePostComment = async () => {
     if (!selectedIdeaId) return;
@@ -333,6 +382,58 @@ export default function PlannedIdeasPage() {
                     <p className="text-sm text-slate-400">
                       No AI-generated plan has been created yet.
                     </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-slate-700/40 bg-[#0a1221] p-4">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-700/40 pb-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.16em] text-cyan-300/80">
+                      Team space
+                    </p>
+                    <h3 className="mt-1 text-lg font-semibold text-white">
+                      Team photos
+                    </h3>
+                  </div>
+                  <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-cyan-400/35 bg-cyan-500/15 px-3 py-1.5 text-sm font-semibold text-cyan-100">
+                    <Camera size={14} aria-hidden />
+                    {uploadingPhoto ? "Uploading..." : "Upload photo"}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      disabled={uploadingPhoto}
+                      onChange={handleTeamPhotoUpload}
+                    />
+                  </label>
+                </div>
+
+                {photoError ? (
+                  <p className="mt-3 text-sm text-red-300">{photoError}</p>
+                ) : null}
+
+                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {teamPhotos.length === 0 ? (
+                    <p className="col-span-full text-sm text-slate-400">
+                      No team photos yet. Be the first to share one.
+                    </p>
+                  ) : (
+                    teamPhotos.map((photo) => (
+                      <figure
+                        key={photo.id}
+                        className="overflow-hidden rounded-xl border border-slate-700/40 bg-[#08101d]"
+                      >
+                        <img
+                          src={photo.imageUrl}
+                          alt={`Team photo uploaded by ${photo.uploadedBy.fullName || photo.uploadedBy.username}`}
+                          className="h-32 w-full object-cover"
+                        />
+                        <figcaption className="px-2 py-1.5 text-[11px] text-slate-400">
+                          {photo.uploadedBy.fullName || photo.uploadedBy.username}
+                        </figcaption>
+                      </figure>
+                    ))
                   )}
                 </div>
               </div>

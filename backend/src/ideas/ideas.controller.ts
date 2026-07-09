@@ -78,6 +78,36 @@ export class IdeasController {
     );
   }
 
+  @Post(':id/team-photos')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('photo', {
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
+  addTeamPhoto(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserPayload,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: /(jpg|jpeg|png|webp)$/i,
+        })
+        .addMaxSizeValidator({
+          maxSize: 5 * 1024 * 1024,
+        })
+        .build({
+          fileIsRequired: true,
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        }),
+    )
+    photo: Express.Multer.File,
+  ) {
+    return this.ideasService.addTeamPhoto(id, user.id, photo);
+  }
+
   @Put(':id/board')
   @UseGuards(JwtAuthGuard)
   saveBoard(

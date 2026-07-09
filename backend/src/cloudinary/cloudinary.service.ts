@@ -24,6 +24,14 @@ export class CloudinaryService {
     );
   }
 
+  async uploadTeamPhoto(file: Express.Multer.File): Promise<UploadApiResponse> {
+    return this.uploadImage(
+      file,
+      'teamtide/team-photos',
+      'Team photo upload failed',
+    );
+  }
+
   private async uploadImage(
     file: Express.Multer.File,
     folder: string,
