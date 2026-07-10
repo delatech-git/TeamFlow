@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import IdeaBoard from "@/app/__components/IdeaBoard";
+import IdeaBoard from "@/app/__components/sections/ideaBoard";
 import { getIdeaById } from "@/src/infrastructure/api/ideas/server";
 import { ideaResponseToDiscoverIdea } from "@/src/entities/models/discover";
 
