@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   addTeamPhoto,
   createIdeaComment,
+  deleteIdeaComment,
   getIdeaById,
   getIdeaComments,
   getIdeas,
@@ -9,6 +10,7 @@ import {
   type IdeaResponseDto,
   type TeamPhotoDto,
 } from "@/src/infrastructure/api/ideas/client";
+import { fetchCurrentUser } from "@/src/infrastructure/api/auth/client";
 import { getAccessToken } from "@/src/infrastructure/auth/session";
 import { toPlannedIdeaCard } from "@/app/planned-ideas/types";
 
@@ -25,8 +27,29 @@ export function usePlannedIdeas(selectedIdeaFromQuery: string | null) {
   const [comments, setComments] = useState<IdeaCommentDto[]>([]);
   const [commentDraft, setCommentDraft] = useState("");
   const [postingComment, setPostingComment] = useState(false);
+  const [postingReplyId, setPostingReplyId] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState("");
+  const [currentUser, setCurrentUser] = useState<{ id: string; role: string } | null>(
+    null,
+  );
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!getAccessToken()) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const me = await fetchCurrentUser();
+        if (!cancelled) setCurrentUser({ id: me.id, role: me.role });
+      } catch {
+        if (!cancelled) setCurrentUser(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -153,25 +176,64 @@ export function usePlannedIdeas(selectedIdeaFromQuery: string | null) {
     }
   };
 
-  const handlePostComment = async () => {
-    if (!selectedIdeaId) return;
-    const content = commentDraft.trim();
-    if (!content) return;
+  const postComment = async (content: string, parentId?: string) => {
+    if (!selectedIdeaId || !content.trim()) return;
     if (!getAccessToken()) {
       window.alert("Please log in to post a comment.");
       return;
     }
-    setPostingComment(true);
     try {
-      const created = await createIdeaComment(selectedIdeaId, { content });
+      const created = await createIdeaComment(selectedIdeaId, {
+        content: content.trim(),
+        parentId,
+      });
       setComments((prev) => [...prev, created]);
-      setCommentDraft("");
+      return created;
     } catch (err) {
       window.alert(
         err instanceof Error ? err.message : "Could not post comment.",
       );
+      return null;
+    }
+  };
+
+  const handlePostComment = async () => {
+    setPostingComment(true);
+    try {
+      const created = await postComment(commentDraft);
+      if (created) setCommentDraft("");
     } finally {
       setPostingComment(false);
+    }
+  };
+
+  const handlePostReply = async (parentId: string, content: string) => {
+    setPostingReplyId(parentId);
+    try {
+      return await postComment(content, parentId);
+    } finally {
+      setPostingReplyId(null);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!selectedIdeaId) return;
+    if (!window.confirm("Delete this comment?")) return;
+
+    setDeletingCommentId(commentId);
+    try {
+      await deleteIdeaComment(selectedIdeaId, commentId);
+      setComments((prev) =>
+        prev.filter(
+          (comment) => comment.id !== commentId && comment.parentId !== commentId,
+        ),
+      );
+    } catch (err) {
+      window.alert(
+        err instanceof Error ? err.message : "Could not delete comment.",
+      );
+    } finally {
+      setDeletingCommentId(null);
     }
   };
 
@@ -186,12 +248,17 @@ export function usePlannedIdeas(selectedIdeaFromQuery: string | null) {
     commentDraft,
     setCommentDraft,
     postingComment,
+    postingReplyId,
     uploadingPhoto,
     photoError,
+    currentUser,
+    deletingCommentId,
     selectedIdeaView,
     plannedGuideSections,
     teamPhotos,
     handleTeamPhotoUpload,
     handlePostComment,
+    handlePostReply,
+    handleDeleteComment,
   };
 }

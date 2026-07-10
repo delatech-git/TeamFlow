@@ -20,13 +20,18 @@ export default function PlannedIdeasPage() {
     commentDraft,
     setCommentDraft,
     postingComment,
+    postingReplyId,
     uploadingPhoto,
     photoError,
+    currentUser,
+    deletingCommentId,
     selectedIdeaView,
     plannedGuideSections,
     teamPhotos,
     handleTeamPhotoUpload,
     handlePostComment,
+    handlePostReply,
+    handleDeleteComment,
   } = usePlannedIdeas(selectedIdeaFromQuery);
 
   return (
@@ -64,9 +69,15 @@ export default function PlannedIdeasPage() {
           onCommentDraftChange={setCommentDraft}
           onPostComment={handlePostComment}
           postingComment={postingComment}
+          postingReplyId={postingReplyId}
+          onPostReply={handlePostReply}
           selectedIdeaId={selectedIdeaId}
           loadingDetails={loadingDetails}
           comments={comments}
+          currentUserId={currentUser?.id ?? null}
+          isAdmin={currentUser?.role === "ADMIN"}
+          deletingCommentId={deletingCommentId}
+          onDeleteComment={handleDeleteComment}
         />
       </div>
     </section>

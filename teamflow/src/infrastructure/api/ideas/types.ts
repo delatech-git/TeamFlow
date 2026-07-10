@@ -79,6 +79,7 @@ export type SaveIdeaBoardBody = {
 
 export type CreateIdeaCommentBody = {
   content: string;
+  parentId?: string;
 };
 
 export type IdeaCommentDto = {
@@ -86,6 +87,7 @@ export type IdeaCommentDto = {
   content: string;
   createdAt: string;
   updatedAt: string;
+  parentId: string | null;
   author: {
     id: string;
     username: string;
