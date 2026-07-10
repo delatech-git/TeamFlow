@@ -20,6 +20,13 @@ export function slugifyTitle(title: string): string {
   return s.length > 0 ? s : "idea";
 }
 
+/** Planned ideas already have a generated guide; send those to the planned-ideas view instead of the board. */
+export function ideaDetailHref(dto: Pick<IdeaResponseDto, "id" | "status">): string {
+  return dto.status === "PLANNED"
+    ? `/planned-ideas?ideaId=${dto.id}`
+    : `/dashboard/ideas/${dto.id}`;
+}
+
 export function ideaResponseToDiscoverIdea(dto: IdeaResponseDto): DiscoverIdea {
   return {
     id: dto.id,

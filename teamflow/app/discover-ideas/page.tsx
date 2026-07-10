@@ -15,6 +15,7 @@ import {
 } from "@/src/infrastructure/api/ideas/client";
 import { fetchCurrentUser } from "@/src/infrastructure/api/auth/client";
 import { getAccessToken } from "@/src/infrastructure/auth/session";
+import { ideaDetailHref } from "@/src/entities/models/discover";
 
 const heroSlides = [
   {
@@ -51,7 +52,7 @@ function mapIdeaToCard(idea: IdeaResponseDto): IdeaCardModel {
     description: idea.shortDescription,
     createdAt: new Date(idea.createdAt).toLocaleDateString(),
     author: idea.createdBy.fullName || idea.createdBy.username,
-    href: `/dashboard/ideas/${idea.id}`,
+    href: ideaDetailHref(idea),
     image: idea.coverImageUrl || fallbackImage,
   };
 }

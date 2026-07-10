@@ -10,6 +10,7 @@ import { deleteIdea } from "@/src/infrastructure/api/ideas/client";
 import type { IdeaResponseDto } from "@/src/infrastructure/api/ideas/types";
 import { fetchCurrentUser } from "@/src/infrastructure/api/auth/client";
 import { getAccessToken } from "@/src/infrastructure/auth/session";
+import { ideaDetailHref } from "@/src/entities/models/discover";
 
 type Props = {
   initialIdeas: IdeaResponseDto[];
@@ -74,7 +75,7 @@ export function RecentIdeasClient({ initialIdeas }: Props) {
                   </div>
                   <div className="absolute bottom-2.5 right-2.5">
                   </div>
-                  <Link href={`/dashboard/ideas/${idea.id}`} className="absolute inset-0" aria-label={`Open ${idea.title}`} />
+                  <Link href={ideaDetailHref(idea)} className="absolute inset-0" aria-label={`Open ${idea.title}`} />
                 </article>
               );
             })}
