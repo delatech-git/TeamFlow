@@ -20,6 +20,14 @@ export function ideaCommentsPath(id: string): string {
   return buildProxyPath(["ideas", id, "comments"]);
 }
 
+export function ideaCommentDetailPath(ideaId: string, commentId: string): string {
+  return buildProxyPath(["ideas", ideaId, "comments", commentId]);
+}
+
+export function commentReactionsPath(commentId: string): string {
+  return buildProxyPath(["comments", commentId, "reactions"]);
+}
+
 export function ideaTeamPhotosPath(id: string): string {
   return buildProxyPath(["ideas", id, "team-photos"]);
 }

@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Lightbulb } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { BackToDashboardLink } from "@/app/__components/layout/backToDashboardLink";
 import { SplitAuthFormLayout } from "@/app/__components/layout/splitAuthFormLayout";
 import { Button } from "@/app/__components/ui/button";
 import { Input } from "@/app/__components/ui/input";
@@ -80,16 +80,7 @@ export default function CreateIdeaPage() {
       image={createIdeaImage}
       imageAlt=""
       wideForm
-      footer={
-        <>
-          <Link
-            href="/dashboard"
-            className="font-semibold text-orange-400 underline decoration-orange-400/40 underline-offset-4 hover:text-orange-300"
-          >
-            Back to dashboard
-          </Link>
-        </>
-      }
+      footer={<BackToDashboardLink />}
     >
       <form onSubmit={onSubmit} className="flex flex-col gap-6">
         {error ? (

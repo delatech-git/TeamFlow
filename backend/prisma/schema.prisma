@@ -141,8 +141,11 @@ model Reaction {
   id    String @id @default(uuid())
   emoji String
 
-  stickerId String
-  sticker   Sticker @relation(fields: [stickerId], references: [id], onDelete: Cascade)
+  stickerId String?
+  sticker   Sticker? @relation(fields: [stickerId], references: [id], onDelete: Cascade)
+
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
   userId String
   user   User   @relation(fields: [userId], references: [id])
@@ -150,6 +153,7 @@ model Reaction {
   createdAt DateTime @default(now())
 
   @@unique([stickerId, userId, emoji])
+  @@unique([commentId, userId])
 }
 
 model Comment {
@@ -165,6 +169,8 @@ model Comment {
   parentId String?
   parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies  Comment[] @relation("CommentReplies")
+
+  reactions Reaction[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

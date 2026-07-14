@@ -1,7 +1,8 @@
 import { proxyDelete, proxyGetJson, proxyPostJson, proxyPutJson } from "../core/fetch-client";
 import { getAccessToken } from "../../auth/session";
-import { ideaCommentsPath, ideaTeamPhotosPath, ideasBoardPath, ideasCreatePath, ideasDetailPath, ideasListPath } from "./paths";
+import { commentReactionsPath, ideaCommentDetailPath, ideaCommentsPath, ideaTeamPhotosPath, ideasBoardPath, ideasCreatePath, ideasDetailPath, ideasListPath } from "./paths";
 import type {
+  CommentReactionDto,
   CreateIdeaBody,
   CreateIdeaCommentBody,
   IdeaCommentDto,
@@ -10,7 +11,13 @@ import type {
   TeamPhotoDto,
 } from "./types";
 
-export type { CreateIdeaBody, IdeaCommentDto, IdeaResponseDto, TeamPhotoDto };
+export type {
+  CommentReactionDto,
+  CreateIdeaBody,
+  IdeaCommentDto,
+  IdeaResponseDto,
+  TeamPhotoDto,
+};
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -179,4 +186,36 @@ export async function createIdeaComment(
       init: { headers: { Authorization: `Bearer ${token}` } },
     },
   );
+}
+
+export async function toggleCommentReaction(
+  commentId: string,
+  emoji: string,
+): Promise<CommentReactionDto | null> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+  return proxyPostJson<CommentReactionDto | null, { emoji: string }>(
+    commentReactionsPath(commentId),
+    { emoji },
+    {
+      errorMessage: "Could not react to comment",
+      init: { headers: { Authorization: `Bearer ${token}` } },
+    },
+  );
+}
+
+export async function deleteIdeaComment(
+  ideaId: string,
+  commentId: string,
+): Promise<void> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+  return proxyDelete(ideaCommentDetailPath(ideaId, commentId), {
+    errorMessage: "Could not delete comment",
+    init: { headers: { Authorization: `Bearer ${token}` } },
+  });
 }

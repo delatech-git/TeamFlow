@@ -6,6 +6,7 @@ import {
   getIdeaById,
   getIdeaComments,
   getIdeas,
+  toggleCommentReaction,
   type IdeaCommentDto,
   type IdeaResponseDto,
   type TeamPhotoDto,
@@ -237,6 +238,34 @@ export function usePlannedIdeas(selectedIdeaFromQuery: string | null) {
     }
   };
 
+  const handleToggleReaction = async (commentId: string, emoji: string) => {
+    if (!getAccessToken()) {
+      window.alert("Please log in to react to a comment.");
+      return;
+    }
+    if (!currentUser) return;
+
+    try {
+      const reaction = await toggleCommentReaction(commentId, emoji);
+      setComments((prev) =>
+        prev.map((comment) => {
+          if (comment.id !== commentId) return comment;
+          const others = comment.reactions.filter(
+            (r) => r.user.id !== currentUser.id,
+          );
+          return {
+            ...comment,
+            reactions: reaction ? [...others, reaction] : others,
+          };
+        }),
+      );
+    } catch (err) {
+      window.alert(
+        err instanceof Error ? err.message : "Could not react to comment.",
+      );
+    }
+  };
+
   return {
     ideas,
     selectedIdeaId,
@@ -260,5 +289,6 @@ export function usePlannedIdeas(selectedIdeaFromQuery: string | null) {
     handlePostComment,
     handlePostReply,
     handleDeleteComment,
+    handleToggleReaction,
   };
 }

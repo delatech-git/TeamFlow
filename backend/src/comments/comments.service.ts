@@ -31,6 +31,7 @@ export class CommentsService {
 
       include: {
         author: true,
+        reactions: { include: { user: true } },
       },
     });
   }
@@ -41,6 +42,7 @@ export class CommentsService {
 
       include: {
         author: true,
+        reactions: { include: { user: true } },
       },
 
       orderBy: {

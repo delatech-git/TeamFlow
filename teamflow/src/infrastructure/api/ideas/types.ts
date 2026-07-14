@@ -82,6 +82,15 @@ export type CreateIdeaCommentBody = {
   parentId?: string;
 };
 
+export type CommentReactionDto = {
+  emoji: string;
+  user: {
+    id: string;
+    username: string;
+    fullName?: string | null;
+  };
+};
+
 export type IdeaCommentDto = {
   id: string;
   content: string;
@@ -94,4 +103,5 @@ export type IdeaCommentDto = {
     fullName?: string | null;
     avatarUrl?: string | null;
   };
+  reactions: CommentReactionDto[];
 };

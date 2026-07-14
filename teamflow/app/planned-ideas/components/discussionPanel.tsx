@@ -1,8 +1,87 @@
 "use client";
 
 import { useState } from "react";
-import { CornerDownRight, Trash2 } from "lucide-react";
+import { CornerDownRight, SmilePlus, Trash2 } from "lucide-react";
 import type { IdeaCommentDto } from "@/src/infrastructure/api/ideas/client";
+
+const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+
+function CommentReactions({
+  comment,
+  currentUserId,
+  onToggleReaction,
+}: {
+  comment: IdeaCommentDto;
+  currentUserId: string | null;
+  onToggleReaction: (commentId: string, emoji: string) => void;
+}) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const grouped = comment.reactions.reduce<
+    Record<string, IdeaCommentDto["reactions"]>
+  >((acc, reaction) => {
+    (acc[reaction.emoji] ??= []).push(reaction);
+    return acc;
+  }, {});
+
+  const pick = (emoji: string) => {
+    onToggleReaction(comment.id, emoji);
+    setPickerOpen(false);
+  };
+
+  return (
+    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+      {Object.entries(grouped).map(([emoji, reactions]) => {
+        const mine = reactions.some((r) => r.user.id === currentUserId);
+        return (
+          <button
+            key={emoji}
+            type="button"
+            onClick={() => pick(emoji)}
+            title={reactions
+              .map((r) => r.user.fullName || r.user.username)
+              .join(", ")}
+            className={[
+              "flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition",
+              mine
+                ? "border-cyan-400/60 bg-cyan-500/20 text-cyan-100"
+                : "border-slate-700/50 bg-[#081120] text-slate-300 hover:border-slate-600",
+            ].join(" ")}
+          >
+            <span>{emoji}</span>
+            <span>{reactions.length}</span>
+          </button>
+        );
+      })}
+
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setPickerOpen((prev) => !prev)}
+          aria-label="Add reaction"
+          className="flex items-center justify-center rounded-full border border-slate-700/50 bg-[#081120] p-1 text-slate-400 transition hover:border-slate-600 hover:text-slate-200"
+        >
+          <SmilePlus size={13} aria-hidden />
+        </button>
+
+        {pickerOpen ? (
+          <div className="absolute bottom-full left-0 z-10 mb-1 flex gap-1 rounded-full border border-slate-700/50 bg-[#0e1728] p-1 shadow-lg">
+            {QUICK_REACTIONS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                onClick={() => pick(emoji)}
+                className="rounded-full p-1 text-sm transition hover:bg-slate-700/50"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
 function formatRelativeTime(timestamp: string): string {
   const delta = Date.now() - new Date(timestamp).getTime();
@@ -111,6 +190,8 @@ function CommentItem({
   canDeleteComment,
   deletingCommentId,
   onDeleteComment,
+  currentUserId,
+  onToggleReaction,
 }: {
   comment: IdeaCommentDto;
   replies: IdeaCommentDto[];
@@ -121,6 +202,8 @@ function CommentItem({
   canDeleteComment: (comment: IdeaCommentDto) => boolean;
   deletingCommentId: string | null;
   onDeleteComment: (commentId: string) => void;
+  currentUserId: string | null;
+  onToggleReaction: (commentId: string, emoji: string) => void;
 }) {
   const name = authorName(comment.author);
 
@@ -148,6 +231,11 @@ function CommentItem({
           <p className="mt-0.5 text-sm leading-6 text-slate-300">
             {comment.content}
           </p>
+          <CommentReactions
+            comment={comment}
+            currentUserId={currentUserId}
+            onToggleReaction={onToggleReaction}
+          />
           <button
             type="button"
             onClick={onToggleReply}
@@ -197,6 +285,11 @@ function CommentItem({
                       <p className="mt-0.5 text-sm leading-6 text-slate-300">
                         {reply.content}
                       </p>
+                      <CommentReactions
+                        comment={reply}
+                        currentUserId={currentUserId}
+                        onToggleReaction={onToggleReaction}
+                      />
                     </div>
                   </div>
                 );
@@ -223,6 +316,7 @@ export function DiscussionPanel({
   isAdmin,
   deletingCommentId,
   onDeleteComment,
+  onToggleReaction,
 }: {
   commentDraft: string;
   onCommentDraftChange: (value: string) => void;
@@ -237,6 +331,7 @@ export function DiscussionPanel({
   isAdmin: boolean;
   deletingCommentId: string | null;
   onDeleteComment: (commentId: string) => void;
+  onToggleReaction: (commentId: string, emoji: string) => void;
 }) {
   const [openReplyId, setOpenReplyId] = useState<string | null>(null);
   const topLevelComments = comments.filter((comment) => !comment.parentId);
@@ -299,6 +394,8 @@ export function DiscussionPanel({
             canDeleteComment={canDeleteComment}
             deletingCommentId={deletingCommentId}
             onDeleteComment={onDeleteComment}
+            currentUserId={currentUserId}
+            onToggleReaction={onToggleReaction}
           />
         ))}
       </div>

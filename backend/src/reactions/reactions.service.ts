@@ -18,4 +18,22 @@ export class ReactionsService {
       },
     });
   }
+
+  async toggleForComment(commentId: string, userId: string, emoji: string) {
+    const existing = await this.prisma.reaction.findUnique({
+      where: { commentId_userId: { commentId, userId } },
+    });
+
+    if (existing?.emoji === emoji) {
+      await this.prisma.reaction.delete({ where: { id: existing.id } });
+      return null;
+    }
+
+    return this.prisma.reaction.upsert({
+      where: { commentId_userId: { commentId, userId } },
+      update: { emoji },
+      create: { commentId, userId, emoji },
+      include: { user: true },
+    });
+  }
 }

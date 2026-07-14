@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import HeroSlider from "../__components/layout/heroSlider";
+import { BackToDashboardLink } from "../__components/layout/backToDashboardLink";
 import { Card } from "../__components/ui/card";
 import { Button } from "../__components/ui/button";
 import HeroImage from "@/assets/HeroBg.png";
@@ -141,7 +142,10 @@ export default function DiscoverIdeasPage() {
 
   return (
     <>
-      <HeroSlider slides={heroSlides} height="small" />
+      <div className="relative">
+        <BackToDashboardLink className="absolute left-4 top-24 z-20 sm:left-6 lg:left-8" />
+        <HeroSlider slides={heroSlides} height="small" />
+      </div>
       <section className="min-h-screen bg-black px-4 py-20 text-white">
         <div className="mx-auto max-w-7xl">
           {!hydrated && (
