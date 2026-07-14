@@ -1,4 +1,5 @@
-import { Camera, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { Camera, LayoutGrid, Sparkles } from "lucide-react";
 import type { PlannedIdeaCard } from "@/app/planned-ideas/types";
 import type { TeamPhotoDto } from "@/src/infrastructure/api/ideas/client";
 
@@ -60,24 +61,43 @@ export function IdeaDetailPanel({
 
   return (
     <section className="rounded-2xl border border-cyan-400/10 bg-[#0b1424] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.4)] sm:p-5">
-      <div className="rounded-2xl border border-slate-700/40 bg-[#0a1221] p-4">
-        <p className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-cyan-200">
-          <Sparkles size={12} aria-hidden />
-          Planned idea
-        </p>
-        <h2 className="mt-3 text-2xl font-bold text-white">
+      <div
+        className="relative overflow-hidden rounded-2xl border border-slate-700/40 bg-[#0a1221] bg-cover bg-center p-4"
+        style={
+          selectedIdeaView.coverImageUrl
+            ? { backgroundImage: `url(${selectedIdeaView.coverImageUrl})` }
+            : undefined
+        }
+      >
+        {selectedIdeaView.coverImageUrl ? (
+          <div className="absolute inset-0 bg-[#0a1221]/80" />
+        ) : null}
+        <div className="relative flex items-center justify-between gap-3">
+          <p className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-cyan-200">
+            <Sparkles size={12} aria-hidden />
+            Planned idea
+          </p>
+          <Link
+            href={`/dashboard/ideas/${selectedIdeaView.id}`}
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-600/50 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-cyan-400/40 hover:text-cyan-200"
+          >
+            <LayoutGrid size={13} aria-hidden />
+            View idea board
+          </Link>
+        </div>
+        <h2 className="relative mt-3 text-2xl font-bold text-white">
           {selectedIdeaView.title}
         </h2>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="relative mt-1 text-sm text-slate-400">
           Event Concept • Created {selectedIdeaView.createdAtLabel} • Updated{" "}
           {selectedIdeaView.updatedLabel}
         </p>
-        <p className="mt-4 text-sm leading-6 text-slate-300">
+        <p className="relative mt-4 text-sm leading-6 text-slate-300">
           This planned idea was generated from the selected board decisions
           and transformed into a structured event guide.
         </p>
 
-        <div className="mt-4 grid gap-2 rounded-xl border border-slate-700/40 bg-[#08101d] p-3">
+        <div className="relative mt-4 grid gap-2 rounded-xl border border-slate-700/40 bg-[#08101d] p-3">
           <Metric label="Team" value={selectedIdeaView.owner} />
         </div>
       </div>

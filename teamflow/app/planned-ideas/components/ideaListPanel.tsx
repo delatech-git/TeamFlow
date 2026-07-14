@@ -47,16 +47,33 @@ export function IdeaListPanel({
               type="button"
               onClick={() => onSelectIdea(idea.id)}
               className={[
-                "w-full rounded-xl border px-3 py-2.5 text-left transition",
+                "relative w-full overflow-hidden rounded-xl border bg-cover bg-center px-3 py-2.5 text-left transition",
                 isActive
-                  ? "border-cyan-300/60 bg-cyan-500/10"
-                  : "border-slate-700/40 bg-[#0e1728] hover:border-cyan-500/30 hover:bg-[#111d32]",
+                  ? "border-cyan-300/60"
+                  : "border-slate-700/40 hover:border-cyan-500/30",
               ].join(" ")}
+              style={
+                idea.coverImageUrl
+                  ? { backgroundImage: `url(${idea.coverImageUrl})` }
+                  : undefined
+              }
             >
-              <p className="line-clamp-1 text-sm font-semibold text-slate-100">
+              <div
+                className={[
+                  "absolute inset-0",
+                  idea.coverImageUrl
+                    ? isActive
+                      ? "bg-cyan-950/55"
+                      : "bg-[#0e1728]/80"
+                    : isActive
+                      ? "bg-cyan-500/10"
+                      : "bg-[#0e1728]",
+                ].join(" ")}
+              />
+              <p className="relative line-clamp-1 text-sm font-semibold text-slate-100">
                 {idea.title}
               </p>
-              <div className="mt-1.5 flex items-center justify-between gap-2 text-xs text-slate-400">
+              <div className="relative mt-1.5 flex items-center justify-between gap-2 text-xs text-slate-400">
                 <span>{idea.updatedLabel}</span>
                 <span className="rounded-full border border-emerald-300/30 bg-emerald-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-200">
                   {idea.status}
