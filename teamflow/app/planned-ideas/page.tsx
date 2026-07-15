@@ -28,7 +28,10 @@ export default function PlannedIdeasPage() {
     deletingCommentId,
     selectedIdeaView,
     teamPhotos,
+    savingGuide,
+    guideError,
     handleTeamPhotoUpload,
+    handleSavePlannedGuide,
     handlePostComment,
     handlePostReply,
     handleDeleteComment,
@@ -64,6 +67,10 @@ export default function PlannedIdeasPage() {
           uploadingPhoto={uploadingPhoto}
           photoError={photoError}
           onTeamPhotoUpload={handleTeamPhotoUpload}
+          canEditGuide={currentUser?.role === "ADMIN"}
+          savingGuide={savingGuide}
+          guideError={guideError}
+          onSavePlannedGuide={handleSavePlannedGuide}
         />
 
         <DiscussionPanel

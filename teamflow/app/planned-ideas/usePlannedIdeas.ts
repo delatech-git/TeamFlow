@@ -7,6 +7,7 @@ import {
   getIdeaComments,
   getIdeas,
   toggleCommentReaction,
+  updatePlannedGuide,
   type IdeaCommentDto,
   type IdeaResponseDto,
   type TeamPhotoDto,
@@ -35,6 +36,8 @@ export function usePlannedIdeas(selectedIdeaFromQuery: string | null) {
     null,
   );
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
+  const [savingGuide, setSavingGuide] = useState(false);
+  const [guideError, setGuideError] = useState("");
 
   useEffect(() => {
     if (!getAccessToken()) return;
@@ -166,6 +169,26 @@ export function usePlannedIdeas(selectedIdeaFromQuery: string | null) {
     }
   };
 
+  const handleSavePlannedGuide = async (summary: string) => {
+    if (!selectedIdeaId) return false;
+    setGuideError("");
+    setSavingGuide(true);
+    try {
+      const updated = await updatePlannedGuide(selectedIdeaId, summary);
+      setSelectedIdeaDetails((prev) =>
+        prev ? { ...prev, plannedGuide: updated } : prev,
+      );
+      return true;
+    } catch (err) {
+      setGuideError(
+        err instanceof Error ? err.message : "Could not save the planned guide.",
+      );
+      return false;
+    } finally {
+      setSavingGuide(false);
+    }
+  };
+
   const postComment = async (content: string, parentId?: string) => {
     if (!selectedIdeaId || !content.trim()) return;
     if (!getAccessToken()) {
@@ -273,7 +296,10 @@ export function usePlannedIdeas(selectedIdeaFromQuery: string | null) {
     deletingCommentId,
     selectedIdeaView,
     teamPhotos,
+    savingGuide,
+    guideError,
     handleTeamPhotoUpload,
+    handleSavePlannedGuide,
     handlePostComment,
     handlePostReply,
     handleDeleteComment,

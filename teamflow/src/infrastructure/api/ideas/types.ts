@@ -26,15 +26,7 @@ export type IdeaResponseDto = {
     color?: string | null;
   }[];
 
-  plannedGuide?: {
-    id: string;
-    summary: string;
-    decisionsJson?: unknown | null;
-    ideaId: string;
-    createdById: string;
-    createdAt: string;
-    updatedAt: string;
-  } | null;
+  plannedGuide?: PlannedGuideDto | null;
 
   board?: {
     id: string;
@@ -67,6 +59,16 @@ export type TeamPhotoDto = {
     fullName?: string | null;
     avatarUrl?: string | null;
   };
+};
+
+export type PlannedGuideDto = {
+  id: string;
+  summary: string;
+  decisionsJson?: unknown | null;
+  ideaId: string;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type SaveIdeaBoardBody = {

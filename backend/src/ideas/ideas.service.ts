@@ -220,6 +220,22 @@ export class IdeasService {
     return { success: true };
   }
 
+  async updatePlannedGuide(id: string, summary: string) {
+    const idea = await this.prisma.idea.findUnique({
+      where: { id },
+      select: { id: true, createdById: true },
+    });
+    if (!idea) {
+      throw new NotFoundException('Idea not found');
+    }
+
+    return this.prisma.planSummary.upsert({
+      where: { ideaId: id },
+      update: { summary },
+      create: { ideaId: id, summary, createdById: idea.createdById },
+    });
+  }
+
   async remove(id: string) {
     const idea = await this.prisma.idea.findUnique({
       where: { id },

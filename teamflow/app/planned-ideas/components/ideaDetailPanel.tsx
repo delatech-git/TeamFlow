@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Camera, ChevronDown, LayoutGrid, Sparkles } from "lucide-react";
+import { Camera, ChevronDown, LayoutGrid, Pencil, Sparkles, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Components } from "react-markdown";
@@ -67,12 +67,20 @@ export function IdeaDetailPanel({
   uploadingPhoto,
   photoError,
   onTeamPhotoUpload,
+  canEditGuide,
+  savingGuide,
+  guideError,
+  onSavePlannedGuide,
 }: {
   selectedIdeaView: PlannedIdeaCard | null;
   teamPhotos: TeamPhotoDto[];
   uploadingPhoto: boolean;
   photoError: string;
   onTeamPhotoUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  canEditGuide: boolean;
+  savingGuide: boolean;
+  guideError: string;
+  onSavePlannedGuide: (summary: string) => Promise<boolean>;
 }) {
   const plannedGuideSections = selectedIdeaView?.summary
     ? splitGuideSections(selectedIdeaView.summary)
@@ -81,12 +89,32 @@ export function IdeaDetailPanel({
   const guideContentRef = useRef<HTMLDivElement>(null);
   const [guideExpanded, setGuideExpanded] = useState(false);
   const [guideOverflows, setGuideOverflows] = useState(false);
+  const [isEditingGuide, setIsEditingGuide] = useState(false);
+  const [guideDraft, setGuideDraft] = useState("");
 
   useEffect(() => {
     const el = guideContentRef.current;
     if (!el) return;
     setGuideOverflows(el.scrollHeight > GUIDE_COLLAPSED_HEIGHT);
   }, [plannedGuideSections]);
+
+  useEffect(() => {
+    setIsEditingGuide(false);
+  }, [selectedIdeaView?.id]);
+
+  const startEditingGuide = () => {
+    setGuideDraft(selectedIdeaView?.summary ?? "");
+    setIsEditingGuide(true);
+  };
+
+  const cancelEditingGuide = () => {
+    setIsEditingGuide(false);
+  };
+
+  const saveEditingGuide = async () => {
+    const saved = await onSavePlannedGuide(guideDraft);
+    if (saved) setIsEditingGuide(false);
+  };
 
   if (!selectedIdeaView) {
     return (
@@ -147,67 +175,118 @@ export function IdeaDetailPanel({
               Final Event Guide
             </h3>
           </div>
-          <span className="rounded-full border border-emerald-300/30 bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-200">
-            Ready
-          </span>
-        </div>
-
-        <div
-          className="relative mt-4 overflow-hidden transition-[max-height] duration-300"
-          style={{
-            maxHeight:
-              guideExpanded || !guideOverflows
-                ? undefined
-                : GUIDE_COLLAPSED_HEIGHT,
-          }}
-        >
-          <div ref={guideContentRef} className="space-y-4">
-            {plannedGuideSections.length > 0 ? (
-              plannedGuideSections.map((section, index) => {
-                const accent = sectionAccent(section);
-                return (
-                  <article
-                    key={`${section.slice(0, 30)}-${index}`}
-                    className={`rounded-xl border ${accent.border} ${accent.bg} p-4`}
-                  >
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={getGuideMarkdownComponents(accent)}
-                    >
-                      {section}
-                    </ReactMarkdown>
-                  </article>
-                );
-              })
+          <div className="flex shrink-0 items-center gap-2">
+            {isEditingGuide ? (
+              <>
+                <button
+                  type="button"
+                  onClick={cancelEditingGuide}
+                  disabled={savingGuide}
+                  className="inline-flex items-center gap-1 rounded-full border border-slate-600/50 px-2.5 py-1 text-xs font-semibold text-slate-300 transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <X size={13} aria-hidden />
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={saveEditingGuide}
+                  disabled={savingGuide}
+                  className="rounded-full bg-linear-to-r from-cyan-500 to-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-[0_0_14px_rgba(34,211,238,0.35)] transition disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {savingGuide ? "Saving..." : "Save"}
+                </button>
+              </>
             ) : (
-              <p className="text-sm text-slate-400">
-                No AI-generated plan has been created yet.
-              </p>
+              <>
+                <span className="rounded-full border border-emerald-300/30 bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-200">
+                  Ready
+                </span>
+                {canEditGuide ? (
+                  <button
+                    type="button"
+                    onClick={startEditingGuide}
+                    className="inline-flex items-center gap-1 rounded-full border border-slate-600/50 px-2.5 py-1 text-xs font-semibold text-slate-300 transition hover:border-cyan-400/40 hover:text-cyan-200"
+                  >
+                    <Pencil size={12} aria-hidden />
+                    Edit
+                  </button>
+                ) : null}
+              </>
             )}
           </div>
-
-          {!guideExpanded && guideOverflows ? (
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-[#0a1221] to-transparent" />
-          ) : null}
         </div>
 
-        {guideOverflows ? (
-          <button
-            type="button"
-            onClick={() => setGuideExpanded((prev) => !prev)}
-            className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-700/40 py-2 text-sm font-semibold text-cyan-300/80 transition hover:border-cyan-400/40 hover:text-cyan-200"
-          >
-            {guideExpanded ? "Show less" : "Show full guide"}
-            <ChevronDown
-              size={15}
-              aria-hidden
-              className={[
-                "transition-transform",
-                guideExpanded ? "rotate-180" : "",
-              ].join(" ")}
-            />
-          </button>
+        {guideError ? (
+          <p className="mt-3 text-sm text-red-300">{guideError}</p>
         ) : null}
+
+        {isEditingGuide ? (
+          <textarea
+            autoFocus
+            value={guideDraft}
+            onChange={(event) => setGuideDraft(event.target.value)}
+            className="mt-4 h-125 w-full resize-y rounded-xl border border-slate-700/40 bg-[#08101d] p-3 font-mono text-sm leading-6 text-slate-200 outline-none focus:border-cyan-400/40"
+          />
+        ) : (
+          <>
+            <div
+              className="relative mt-4 overflow-hidden transition-[max-height] duration-300"
+              style={{
+                maxHeight:
+                  guideExpanded || !guideOverflows
+                    ? undefined
+                    : GUIDE_COLLAPSED_HEIGHT,
+              }}
+            >
+              <div ref={guideContentRef} className="space-y-4">
+                {plannedGuideSections.length > 0 ? (
+                  plannedGuideSections.map((section, index) => {
+                    const accent = sectionAccent(section);
+                    return (
+                      <article
+                        key={`${section.slice(0, 30)}-${index}`}
+                        className={`rounded-xl border ${accent.border} ${accent.bg} p-4`}
+                      >
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={getGuideMarkdownComponents(accent)}
+                        >
+                          {section}
+                        </ReactMarkdown>
+                      </article>
+                    );
+                  })
+                ) : (
+                  <p className="text-sm text-slate-400">
+                    No AI-generated plan has been created yet.
+                  </p>
+                )}
+              </div>
+
+              {!guideExpanded && guideOverflows ? (
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-[#0a1221] to-transparent" />
+              ) : null}
+            </div>
+
+            {guideOverflows ? (
+              <button
+                type="button"
+                onClick={() => setGuideExpanded((prev) => !prev)}
+                className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-700/40 py-2 text-sm font-semibold text-cyan-300/80 transition hover:border-cyan-400/40 hover:text-cyan-200"
+              >
+                {guideExpanded ? "Show less" : "Show full guide"}
+                <ChevronDown
+                  size={15}
+                  aria-hidden
+                  className={[
+                    "transition-transform",
+                    guideExpanded ? "rotate-180" : "",
+                  ].join(" ")}
+                />
+              </button>
+            ) : null}
+          </>
+        )}
       </div>
 
       <div className="mt-4 rounded-2xl border border-slate-700/40 bg-[#0a1221] p-4">

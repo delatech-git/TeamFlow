@@ -20,7 +20,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { IdeasService } from './ideas.service';
 import { CreateIdeaMultipartDto } from './dto/createIdeaMultipartDto';
 import { SaveIdeaBoardDto } from './dto/save-idea-board.dto';
+import { UpdatePlannedGuideDto } from './dto/update-planned-guide.dto';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth-guard';
+import { RolesGuard } from '@/auth/guards/roles.guard';
+import { Roles } from '@/common/decorators/roles.decorator';
 import {
   CurrentUser,
   CurrentUserPayload,
@@ -116,6 +119,16 @@ export class IdeasController {
     @CurrentUser() user: CurrentUserPayload,
   ) {
     return this.ideasService.saveBoard(id, dto, user.id);
+  }
+
+  @Put(':id/planned-guide')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  updatePlannedGuide(
+    @Param('id') id: string,
+    @Body() dto: UpdatePlannedGuideDto,
+  ) {
+    return this.ideasService.updatePlannedGuide(id, dto.summary);
   }
 
   @Delete(':id')

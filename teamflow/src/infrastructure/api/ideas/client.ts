@@ -1,12 +1,13 @@
 import { proxyDelete, proxyGetJson, proxyPostJson, proxyPutJson } from "../core/fetch-client";
 import { getAccessToken } from "../../auth/session";
-import { commentReactionsPath, ideaCommentDetailPath, ideaCommentsPath, ideaTeamPhotosPath, ideasBoardPath, ideasCreatePath, ideasDetailPath, ideasListPath } from "./paths";
+import { commentReactionsPath, ideaCommentDetailPath, ideaCommentsPath, ideaPlannedGuidePath, ideaTeamPhotosPath, ideasBoardPath, ideasCreatePath, ideasDetailPath, ideasListPath } from "./paths";
 import type {
   CommentReactionDto,
   CreateIdeaBody,
   CreateIdeaCommentBody,
   IdeaCommentDto,
   IdeaResponseDto,
+  PlannedGuideDto,
   SaveIdeaBoardBody,
   TeamPhotoDto,
 } from "./types";
@@ -16,6 +17,7 @@ export type {
   CreateIdeaBody,
   IdeaCommentDto,
   IdeaResponseDto,
+  PlannedGuideDto,
   TeamPhotoDto,
 };
 
@@ -114,6 +116,24 @@ export async function saveIdeaBoard(
     body,
     {
       errorMessage: "Could not save idea board",
+      init: { headers: { Authorization: `Bearer ${token}` } },
+    },
+  );
+}
+
+export async function updatePlannedGuide(
+  id: string,
+  summary: string,
+): Promise<PlannedGuideDto> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+  return proxyPutJson<PlannedGuideDto, { summary: string }>(
+    ideaPlannedGuidePath(id),
+    { summary },
+    {
+      errorMessage: "Could not save the planned guide",
       init: { headers: { Authorization: `Bearer ${token}` } },
     },
   );
