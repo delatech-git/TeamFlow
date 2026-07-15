@@ -1,19 +1,18 @@
 import Link from "next/link";
-import { Camera, LayoutGrid, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Camera, ChevronDown, LayoutGrid, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Components } from "react-markdown";
 import type { PlannedIdeaCard } from "@/app/planned-ideas/types";
 import type { TeamPhotoDto } from "@/src/infrastructure/api/ideas/client";
+import {
+  hashAccent,
+  sectionAccent,
+  type Accent,
+} from "@/app/planned-ideas/colorAccents";
 
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-slate-700/40 bg-[#0b1628] px-2.5 py-2">
-      <p className="text-[11px] text-slate-400">{label}</p>
-      <p className="mt-0.5 text-sm font-semibold text-slate-100">{value}</p>
-    </div>
-  );
-}
+const GUIDE_COLLAPSED_HEIGHT = 500;
 
 // Guide is stored as GFM markdown with "## <emoji> Title" section headings.
 function splitGuideSections(markdown: string): string[] {
@@ -23,44 +22,44 @@ function splitGuideSections(markdown: string): string[] {
     .filter(Boolean);
 }
 
-const guideMarkdownComponents: Components = {
-  h2: ({ children }) => (
-    <p className="text-sm font-semibold text-white">{children}</p>
-  ),
-  p: ({ children }) => (
-    <p className="text-sm leading-6 text-slate-300">{children}</p>
-  ),
-  ul: ({ children }) => (
-    <ul className="mt-2 space-y-1.5">{children}</ul>
-  ),
-  li: ({ children }) => (
-    <li className="flex gap-2 text-sm leading-6 text-slate-300">
-      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-300/60" />
-      <span>{children}</span>
-    </li>
-  ),
-  table: ({ children }) => (
-    <div className="mt-2 overflow-x-auto rounded-lg border border-slate-700/40">
-      <table className="w-full text-left text-sm text-slate-300">
+function getGuideMarkdownComponents(accent: Accent): Components {
+  return {
+    h2: ({ children }) => (
+      <p className={`text-sm font-semibold ${accent.text}`}>{children}</p>
+    ),
+    p: ({ children }) => (
+      <p className="text-sm leading-6 text-slate-300">{children}</p>
+    ),
+    ul: ({ children }) => <ul className="mt-2 space-y-1.5">{children}</ul>,
+    li: ({ children }) => (
+      <li className="flex gap-2 text-sm leading-6 text-slate-300">
+        <span className={`mt-2 h-1 w-1 shrink-0 rounded-full ${accent.dot}`} />
+        <span>{children}</span>
+      </li>
+    ),
+    table: ({ children }) => (
+      <div className={`mt-2 overflow-x-auto rounded-lg border ${accent.border}`}>
+        <table className="w-full text-left text-sm text-slate-300">
+          {children}
+        </table>
+      </div>
+    ),
+    thead: ({ children }) => (
+      <thead className={`${accent.bg} text-xs uppercase tracking-wide ${accent.text}`}>
         {children}
-      </table>
-    </div>
-  ),
-  thead: ({ children }) => (
-    <thead className="bg-[#0b1628] text-xs uppercase tracking-wide text-cyan-300/80">
-      {children}
-    </thead>
-  ),
-  th: ({ children }) => <th className="px-3 py-2 font-semibold">{children}</th>,
-  td: ({ children }) => (
-    <td className="border-t border-slate-700/40 px-3 py-2 align-top">
-      {children}
-    </td>
-  ),
-  strong: ({ children }) => (
-    <strong className="font-semibold text-white">{children}</strong>
-  ),
-};
+      </thead>
+    ),
+    th: ({ children }) => <th className="px-3 py-2 font-semibold">{children}</th>,
+    td: ({ children }) => (
+      <td className="border-t border-slate-700/40 px-3 py-2 align-top">
+        {children}
+      </td>
+    ),
+    strong: ({ children }) => (
+      <strong className="font-semibold text-white">{children}</strong>
+    ),
+  };
+}
 
 export function IdeaDetailPanel({
   selectedIdeaView,
@@ -78,6 +77,16 @@ export function IdeaDetailPanel({
   const plannedGuideSections = selectedIdeaView?.summary
     ? splitGuideSections(selectedIdeaView.summary)
     : [];
+
+  const guideContentRef = useRef<HTMLDivElement>(null);
+  const [guideExpanded, setGuideExpanded] = useState(false);
+  const [guideOverflows, setGuideOverflows] = useState(false);
+
+  useEffect(() => {
+    const el = guideContentRef.current;
+    if (!el) return;
+    setGuideOverflows(el.scrollHeight > GUIDE_COLLAPSED_HEIGHT);
+  }, [plannedGuideSections]);
 
   if (!selectedIdeaView) {
     return (
@@ -126,10 +135,6 @@ export function IdeaDetailPanel({
           This planned idea was generated from the selected board decisions
           and transformed into a structured event guide.
         </p>
-
-        <div className="relative mt-4 grid gap-2 rounded-xl border border-slate-700/40 bg-[#08101d] p-3">
-          <Metric label="Team" value={selectedIdeaView.owner} />
-        </div>
       </div>
 
       <div className="mt-4 rounded-2xl border border-slate-700/40 bg-[#0a1221] p-4">
@@ -147,27 +152,62 @@ export function IdeaDetailPanel({
           </span>
         </div>
 
-        <div className="mt-4 space-y-4">
-          {plannedGuideSections.length > 0 ? (
-            plannedGuideSections.map((section, index) => (
-              <article
-                key={`${section.slice(0, 30)}-${index}`}
-                className="rounded-xl border border-slate-700/40 bg-[#08101d] p-4"
-              >
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={guideMarkdownComponents}
-                >
-                  {section}
-                </ReactMarkdown>
-              </article>
-            ))
-          ) : (
-            <p className="text-sm text-slate-400">
-              No AI-generated plan has been created yet.
-            </p>
-          )}
+        <div
+          className="relative mt-4 overflow-hidden transition-[max-height] duration-300"
+          style={{
+            maxHeight:
+              guideExpanded || !guideOverflows
+                ? undefined
+                : GUIDE_COLLAPSED_HEIGHT,
+          }}
+        >
+          <div ref={guideContentRef} className="space-y-4">
+            {plannedGuideSections.length > 0 ? (
+              plannedGuideSections.map((section, index) => {
+                const accent = sectionAccent(section);
+                return (
+                  <article
+                    key={`${section.slice(0, 30)}-${index}`}
+                    className={`rounded-xl border ${accent.border} ${accent.bg} p-4`}
+                  >
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={getGuideMarkdownComponents(accent)}
+                    >
+                      {section}
+                    </ReactMarkdown>
+                  </article>
+                );
+              })
+            ) : (
+              <p className="text-sm text-slate-400">
+                No AI-generated plan has been created yet.
+              </p>
+            )}
+          </div>
+
+          {!guideExpanded && guideOverflows ? (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-[#0a1221] to-transparent" />
+          ) : null}
         </div>
+
+        {guideOverflows ? (
+          <button
+            type="button"
+            onClick={() => setGuideExpanded((prev) => !prev)}
+            className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-700/40 py-2 text-sm font-semibold text-cyan-300/80 transition hover:border-cyan-400/40 hover:text-cyan-200"
+          >
+            {guideExpanded ? "Show less" : "Show full guide"}
+            <ChevronDown
+              size={15}
+              aria-hidden
+              className={[
+                "transition-transform",
+                guideExpanded ? "rotate-180" : "",
+              ].join(" ")}
+            />
+          </button>
+        ) : null}
       </div>
 
       <div className="mt-4 rounded-2xl border border-slate-700/40 bg-[#0a1221] p-4">
@@ -203,21 +243,24 @@ export function IdeaDetailPanel({
               No team photos yet. Be the first to share one.
             </p>
           ) : (
-            teamPhotos.map((photo) => (
-              <figure
-                key={photo.id}
-                className="overflow-hidden rounded-xl border border-slate-700/40 bg-[#08101d]"
-              >
-                <img
-                  src={photo.imageUrl}
-                  alt={`Team photo uploaded by ${photo.uploadedBy.fullName || photo.uploadedBy.username}`}
-                  className="h-32 w-full object-cover"
-                />
-                <figcaption className="px-2 py-1.5 text-[11px] text-slate-400">
-                  {photo.uploadedBy.fullName || photo.uploadedBy.username}
-                </figcaption>
-              </figure>
-            ))
+            teamPhotos.map((photo) => {
+              const accent = hashAccent(photo.uploadedBy.id);
+              return (
+                <figure
+                  key={photo.id}
+                  className={`overflow-hidden rounded-xl border ${accent.border} bg-[#08101d]`}
+                >
+                  <img
+                    src={photo.imageUrl}
+                    alt={`Team photo uploaded by ${photo.uploadedBy.fullName || photo.uploadedBy.username}`}
+                    className="h-32 w-full object-cover"
+                  />
+                  <figcaption className="px-2 py-1.5 text-[11px] text-slate-400">
+                    {photo.uploadedBy.fullName || photo.uploadedBy.username}
+                  </figcaption>
+                </figure>
+              );
+            })
           )}
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CornerDownRight, SmilePlus, Trash2 } from "lucide-react";
 import type { IdeaCommentDto } from "@/src/infrastructure/api/ideas/client";
+import { hashAccent } from "@/app/planned-ideas/colorAccents";
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 const COMMENTS_PAGE_SIZE = 3;
@@ -34,6 +35,7 @@ function CommentReactions({
     <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
       {Object.entries(grouped).map(([emoji, reactions]) => {
         const mine = reactions.some((r) => r.user.id === currentUserId);
+        const pillAccent = hashAccent(emoji);
         return (
           <button
             key={emoji}
@@ -43,10 +45,9 @@ function CommentReactions({
               .map((r) => r.user.fullName || r.user.username)
               .join(", ")}
             className={[
-              "flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition",
-              mine
-                ? "border-cyan-400/60 bg-cyan-500/20 text-cyan-100"
-                : "border-slate-700/50 bg-[#081120] text-slate-300 hover:border-slate-600",
+              "flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-white shadow-sm transition",
+              pillAccent.solidBg,
+              mine ? "ring-2 ring-white/70" : "",
             ].join(" ")}
           >
             <span>{emoji}</span>
@@ -102,15 +103,19 @@ function authorName(author: IdeaCommentDto["author"]): string {
 
 function CommentAvatar({
   name,
+  accentKey,
   size = "md",
 }: {
   name: string;
+  accentKey: string;
   size?: "md" | "sm";
 }) {
+  const accent = hashAccent(accentKey);
   return (
     <span
       className={[
-        "flex shrink-0 items-center justify-center rounded-full border border-cyan-300/30 bg-cyan-500/15 font-semibold text-cyan-200",
+        "flex shrink-0 items-center justify-center rounded-full font-semibold text-white shadow-md",
+        accent.solidBg,
         size === "md" ? "h-8 w-8 text-xs" : "h-6 w-6 text-[11px]",
       ].join(" ")}
       aria-hidden
@@ -172,7 +177,7 @@ function CommentReplyForm({
           type="button"
           disabled={posting || draft.trim().length === 0}
           onClick={() => onSubmit(draft)}
-          className="rounded-lg border border-cyan-400/35 bg-cyan-500/15 px-2.5 py-1 text-xs font-semibold text-cyan-100 disabled:cursor-not-allowed disabled:opacity-45"
+          className="rounded-lg bg-linear-to-r from-cyan-500 to-blue-600 px-2.5 py-1 text-xs font-semibold text-white shadow-[0_0_12px_rgba(34,211,238,0.3)] transition hover:shadow-[0_0_18px_rgba(34,211,238,0.45)] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:shadow-[0_0_12px_rgba(34,211,238,0.3)]"
         >
           {posting ? "Posting..." : "Reply"}
         </button>
@@ -207,11 +212,12 @@ function CommentItem({
   onToggleReaction: (commentId: string, emoji: string) => void;
 }) {
   const name = authorName(comment.author);
+  const accent = hashAccent(comment.author.id);
 
   return (
-    <article className="rounded-xl border border-slate-700/30 bg-[#0e1728] p-3">
+    <article className={`rounded-xl border bg-[#0e1728] p-3 ${accent.border}`}>
       <div className="flex gap-2.5">
-        <CommentAvatar name={name} />
+        <CommentAvatar name={name} accentKey={comment.author.id} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <p className="truncate text-sm font-semibold text-slate-100">
@@ -260,12 +266,16 @@ function CommentItem({
           ) : null}
 
           {replies.length > 0 ? (
-            <div className="mt-3 space-y-3 border-l border-cyan-400/15 pl-3">
+            <div className={`mt-3 space-y-3 border-l pl-3 ${accent.border}`}>
               {replies.map((reply) => {
                 const replyName = authorName(reply.author);
                 return (
                   <div key={reply.id} className="flex gap-2">
-                    <CommentAvatar name={replyName} size="sm" />
+                    <CommentAvatar
+                      name={replyName}
+                      accentKey={reply.author.id}
+                      size="sm"
+                    />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <p className="truncate text-xs font-semibold text-slate-100">
@@ -374,7 +384,7 @@ export function DiscussionPanel({
           disabled={
             postingComment || !selectedIdeaId || commentDraft.trim().length === 0
           }
-          className="mt-2 w-full rounded-lg border border-cyan-400/35 bg-cyan-500/15 px-3 py-2 text-sm font-semibold text-cyan-100 disabled:cursor-not-allowed disabled:opacity-45"
+          className="mt-2 w-full rounded-lg bg-linear-to-r from-cyan-500 to-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-[0_0_18px_rgba(34,211,238,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_0_26px_rgba(34,211,238,0.5)] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0 disabled:hover:shadow-[0_0_18px_rgba(34,211,238,0.35)]"
         >
           {postingComment ? "Posting..." : "Post comment"}
         </button>
