@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   addTeamPhoto,
   createIdeaComment,
@@ -121,17 +121,6 @@ export function usePlannedIdeas(selectedIdeaFromQuery: string | null) {
   const selectedIdeaView = selectedIdeaDetails
     ? toPlannedIdeaCard(selectedIdeaDetails)
     : selectedIdea;
-
-  const plannedGuideSections = useMemo(() => {
-    if (!selectedIdeaView?.summary) return [];
-
-    return selectedIdeaView.summary
-      .split(
-        /\n(?=\d+\.\s|#{1,3}\s|[A-Z][A-Za-z\s/]+:|[^\n]+🎯|[^\n]+✨|[^\n]+📍|[^\n]+🍽️|[^\n]+🎵|[^\n]+🎨|[^\n]+✅)/,
-      )
-      .map((section) => section.trim())
-      .filter(Boolean);
-  }, [selectedIdeaView?.summary]);
 
   const teamPhotos: TeamPhotoDto[] = selectedIdeaDetails?.teamPhotos ?? [];
 
@@ -283,7 +272,6 @@ export function usePlannedIdeas(selectedIdeaFromQuery: string | null) {
     currentUser,
     deletingCommentId,
     selectedIdeaView,
-    plannedGuideSections,
     teamPhotos,
     handleTeamPhotoUpload,
     handlePostComment,

@@ -114,6 +114,7 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
         if (cancelled) return;
         const displayName = user.fullName?.trim() || user.username;
         setCurrentUserName(displayName || "Teammate");
+        setIsAdminMode(user.role === "ADMIN");
       } catch {
         if (!cancelled) {
           setCurrentUserName("Teammate");
@@ -352,13 +353,6 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
         ? prev.filter((id) => id !== noteId)
         : [...prev, noteId],
     );
-  };
-
-  const handleAdminModeChange = (checked: boolean) => {
-    setIsAdminMode(checked);
-    if (!checked) {
-      setIsPinMode(false);
-    }
   };
 
   const togglePinMode = () => setIsPinMode((prev) => !prev);
@@ -890,7 +884,6 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
     selectBoardTool,
     handleDrop,
     togglePinnedNote,
-    handleAdminModeChange,
     togglePinMode,
     generateSummaryPreview,
     startEditingNote,

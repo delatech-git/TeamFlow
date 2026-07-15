@@ -45,7 +45,6 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
     selectBoardTool,
     handleDrop,
     togglePinnedNote,
-    handleAdminModeChange,
     togglePinMode,
     generateSummaryPreview,
     startEditingNote,
@@ -317,7 +316,6 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
         selectedTextItem={selectedTextItem}
         selectedShapeItem={selectedShapeItem}
         selectedTool={selectedBoardTool}
-        onToggleAdmin={handleAdminModeChange}
         onTogglePinMode={togglePinMode}
         onGenerateSummary={generateSummaryPreview}
         onSelectTool={selectBoardTool}

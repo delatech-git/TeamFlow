@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { Camera, LayoutGrid, Sparkles } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import type { Components } from "react-markdown";
 import type { PlannedIdeaCard } from "@/app/planned-ideas/types";
 import type { TeamPhotoDto } from "@/src/infrastructure/api/ideas/client";
 
@@ -12,43 +15,70 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function getSectionIcon(section: string): string {
-  const normalized = section.toLowerCase();
-
-  if (normalized.includes("overview")) return "🎯";
-  if (normalized.includes("concept")) return "✨";
-  if (normalized.includes("decision")) return "📌";
-  if (normalized.includes("location") || normalized.includes("setup"))
-    return "📍";
-  if (normalized.includes("food") || normalized.includes("drink")) return "🍽️";
-  if (normalized.includes("entertainment") || normalized.includes("activity"))
-    return "🎵";
-  if (normalized.includes("decoration") || normalized.includes("atmosphere"))
-    return "🎨";
-  if (normalized.includes("role") || normalized.includes("respons"))
-    return "👥";
-  if (normalized.includes("timeline")) return "🗓️";
-  if (normalized.includes("checklist") || normalized.includes("action"))
-    return "✅";
-
-  return "💡";
+// Guide is stored as GFM markdown with "## <emoji> Title" section headings.
+function splitGuideSections(markdown: string): string[] {
+  return markdown
+    .split(/\n(?=##\s)/)
+    .map((section) => section.trim())
+    .filter(Boolean);
 }
+
+const guideMarkdownComponents: Components = {
+  h2: ({ children }) => (
+    <p className="text-sm font-semibold text-white">{children}</p>
+  ),
+  p: ({ children }) => (
+    <p className="text-sm leading-6 text-slate-300">{children}</p>
+  ),
+  ul: ({ children }) => (
+    <ul className="mt-2 space-y-1.5">{children}</ul>
+  ),
+  li: ({ children }) => (
+    <li className="flex gap-2 text-sm leading-6 text-slate-300">
+      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-300/60" />
+      <span>{children}</span>
+    </li>
+  ),
+  table: ({ children }) => (
+    <div className="mt-2 overflow-x-auto rounded-lg border border-slate-700/40">
+      <table className="w-full text-left text-sm text-slate-300">
+        {children}
+      </table>
+    </div>
+  ),
+  thead: ({ children }) => (
+    <thead className="bg-[#0b1628] text-xs uppercase tracking-wide text-cyan-300/80">
+      {children}
+    </thead>
+  ),
+  th: ({ children }) => <th className="px-3 py-2 font-semibold">{children}</th>,
+  td: ({ children }) => (
+    <td className="border-t border-slate-700/40 px-3 py-2 align-top">
+      {children}
+    </td>
+  ),
+  strong: ({ children }) => (
+    <strong className="font-semibold text-white">{children}</strong>
+  ),
+};
 
 export function IdeaDetailPanel({
   selectedIdeaView,
-  plannedGuideSections,
   teamPhotos,
   uploadingPhoto,
   photoError,
   onTeamPhotoUpload,
 }: {
   selectedIdeaView: PlannedIdeaCard | null;
-  plannedGuideSections: string[];
   teamPhotos: TeamPhotoDto[];
   uploadingPhoto: boolean;
   photoError: string;
   onTeamPhotoUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
+  const plannedGuideSections = selectedIdeaView?.summary
+    ? splitGuideSections(selectedIdeaView.summary)
+    : [];
+
   if (!selectedIdeaView) {
     return (
       <section className="rounded-2xl border border-cyan-400/10 bg-[#0b1424] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.4)] sm:p-5">
@@ -124,15 +154,12 @@ export function IdeaDetailPanel({
                 key={`${section.slice(0, 30)}-${index}`}
                 className="rounded-xl border border-slate-700/40 bg-[#08101d] p-4"
               >
-                <div className="flex gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-cyan-300/25 bg-cyan-400/10 text-lg">
-                    {getSectionIcon(section)}
-                  </div>
-
-                  <div className="whitespace-pre-line text-sm leading-7 text-slate-200">
-                    {section}
-                  </div>
-                </div>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={guideMarkdownComponents}
+                >
+                  {section}
+                </ReactMarkdown>
               </article>
             ))
           ) : (

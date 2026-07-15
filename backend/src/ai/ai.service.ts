@@ -106,6 +106,14 @@ Do not simply repeat the notes.
 Use pinned notes as the selected final decisions.
 Use unpinned notes only as additional context or inspiration.
 Write clearly, practically, and in a structured way.
+
+Output valid GitHub-flavored Markdown only. Follow this exact format:
+- Each of the 10 sections is a level-2 heading, e.g. "## 🎯 Event overview".
+- Use "- " bullet lists under each section for plain points.
+- For "Roles and responsibilities" and "Timeline before the event", use a
+  Markdown table (with a header row) instead of a bullet list.
+- Do not nest bullet lists.
+- Do not add any text outside the 10 sections.
 `,
         },
         {

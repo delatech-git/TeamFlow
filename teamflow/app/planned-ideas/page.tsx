@@ -27,7 +27,6 @@ export default function PlannedIdeasPage() {
     currentUser,
     deletingCommentId,
     selectedIdeaView,
-    plannedGuideSections,
     teamPhotos,
     handleTeamPhotoUpload,
     handlePostComment,
@@ -61,7 +60,6 @@ export default function PlannedIdeasPage() {
 
         <IdeaDetailPanel
           selectedIdeaView={selectedIdeaView}
-          plannedGuideSections={plannedGuideSections}
           teamPhotos={teamPhotos}
           uploadingPhoto={uploadingPhoto}
           photoError={photoError}

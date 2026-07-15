@@ -15,7 +15,6 @@ export default function FunDashboard({
   selectedTextItem,
   selectedShapeItem,
   selectedTool,
-  onToggleAdmin,
   onTogglePinMode,
   onGenerateSummary,
   onSelectTool,
@@ -52,7 +51,6 @@ export default function FunDashboard({
         notes={notes}
         postedDecisionId={postedDecisionId}
         plannedIdeasHref={plannedIdeasHref}
-        onToggleAdmin={onToggleAdmin}
         onTogglePinMode={onTogglePinMode}
         onGenerateSummary={onGenerateSummary}
       />

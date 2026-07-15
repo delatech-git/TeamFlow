@@ -10,7 +10,6 @@ export function SummaryPanel({
   notes,
   postedDecisionId,
   plannedIdeasHref,
-  onToggleAdmin,
   onTogglePinMode,
   onGenerateSummary,
 }: {
@@ -20,28 +19,20 @@ export function SummaryPanel({
   notes: StickyNote[];
   postedDecisionId: string | null;
   plannedIdeasHref: string;
-  onToggleAdmin: (checked: boolean) => void;
   onTogglePinMode: () => void;
   onGenerateSummary: () => void | Promise<void>;
 }) {
+  if (!isAdminMode) return null;
+
   return (
     <section className="tf-board-tools-section mt-3">
       <div className="flex items-center justify-between gap-3">
         <p className="tf-board-tools-title">AI Summary</p>
-        <label className="tf-board-admin-label">
-          <input
-            type="checkbox"
-            checked={isAdminMode}
-            onChange={(event) => onToggleAdmin(event.target.checked)}
-          />
-          Admin
-        </label>
       </div>
       <button
         type="button"
         role="switch"
         aria-checked={isPinMode}
-        disabled={!isAdminMode}
         onClick={onTogglePinMode}
         className={[
           "tf-board-pin-toggle mt-2",
@@ -87,7 +78,7 @@ export function SummaryPanel({
 
       <button
         type="button"
-        disabled={!isAdminMode || pinnedNoteIds.length === 0}
+        disabled={pinnedNoteIds.length === 0}
         onClick={onGenerateSummary}
         className="tf-board-summary-btn mt-3 w-full disabled:cursor-not-allowed disabled:opacity-50"
       >
