@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CornerDownRight, SmilePlus, Trash2 } from "lucide-react";
 import type { IdeaCommentDto } from "@/src/infrastructure/api/ideas/client";
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+const COMMENTS_PAGE_SIZE = 3;
 
 function CommentReactions({
   comment,
@@ -334,9 +335,19 @@ export function DiscussionPanel({
   onToggleReaction: (commentId: string, emoji: string) => void;
 }) {
   const [openReplyId, setOpenReplyId] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(COMMENTS_PAGE_SIZE);
   const topLevelComments = comments.filter((comment) => !comment.parentId);
   const canDeleteComment = (comment: IdeaCommentDto) =>
     isAdmin || (currentUserId !== null && comment.author.id === currentUserId);
+
+  useEffect(() => {
+    setVisibleCount(COMMENTS_PAGE_SIZE);
+  }, [selectedIdeaId]);
+
+  const visibleComments = topLevelComments.slice(0, visibleCount);
+  const hasMore = visibleCount < topLevelComments.length;
+  const isFullyExpanded =
+    topLevelComments.length > COMMENTS_PAGE_SIZE && !hasMore;
 
   return (
     <aside className="rounded-2xl border border-cyan-400/10 bg-[#0b1424] p-3 shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
@@ -377,7 +388,7 @@ export function DiscussionPanel({
             No comments yet for this idea.
           </p>
         ) : null}
-        {topLevelComments.map((comment) => (
+        {visibleComments.map((comment) => (
           <CommentItem
             key={comment.id}
             comment={comment}
@@ -398,6 +409,26 @@ export function DiscussionPanel({
             onToggleReaction={onToggleReaction}
           />
         ))}
+        {hasMore ? (
+          <button
+            type="button"
+            onClick={() =>
+              setVisibleCount((prev) => prev + COMMENTS_PAGE_SIZE)
+            }
+            className="w-full rounded-lg border border-slate-700/50 py-1.5 text-xs font-semibold text-cyan-300/80 transition hover:border-cyan-400/40 hover:text-cyan-200"
+          >
+            Load more
+          </button>
+        ) : null}
+        {isFullyExpanded ? (
+          <button
+            type="button"
+            onClick={() => setVisibleCount(COMMENTS_PAGE_SIZE)}
+            className="w-full rounded-lg border border-slate-700/50 py-1.5 text-xs font-semibold text-cyan-300/80 transition hover:border-cyan-400/40 hover:text-cyan-200"
+          >
+            Show less
+          </button>
+        ) : null}
       </div>
     </aside>
   );
