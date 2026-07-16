@@ -58,7 +58,7 @@ export default function PlannedIdeasPage() {
 
         <BackToDashboardLink />
       </div>
-      <div className="mx-auto grid max-w-425 gap-4 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
+      <div className="mx-auto grid max-w-425 gap-4 lg:grid-cols-[210px_minmax(0,1fr)_240px] xl:grid-cols-[260px_minmax(0,1fr)_300px]">
         <IdeaListPanel
           ideas={ideas}
           selectedIdeaId={selectedIdeaId}

@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 
 import { PrismaService } from '@/prisma/prisma.service';
-import { CreateUserDto } from './dto/create-user.dto';
+import { Prisma } from '../../generated/prisma/client';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
@@ -33,9 +38,16 @@ export class UsersService {
   async update(id: string, updateUserDto: UpdateUserDto) {
     await this.findOne(id);
 
+    const { password, ...rest } = updateUserDto;
+    const data: Prisma.UserUpdateInput = { ...rest };
+
+    if (password) {
+      data.passwordHash = await bcrypt.hash(password, 10);
+    }
+
     return this.prisma.user.update({
       where: { id },
-      data: updateUserDto,
+      data,
       select: this.userSelect(),
     });
   }
@@ -53,13 +65,29 @@ export class UsersService {
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string, requestingUserId: string) {
     await this.findOne(id);
 
-    return this.prisma.user.delete({
-      where: { id },
-      select: this.userSelect(),
-    });
+    if (id === requestingUserId) {
+      throw new BadRequestException('You cannot delete your own account');
+    }
+
+    try {
+      return await this.prisma.user.delete({
+        where: { id },
+        select: this.userSelect(),
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2003'
+      ) {
+        throw new BadRequestException(
+          'Cannot delete this user because they still have ideas, comments, or other content. Remove or reassign that content first.',
+        );
+      }
+      throw error;
+    }
   }
 
   private userSelect() {

@@ -14,6 +14,7 @@ import {
 import { PhotoLightbox } from "@/app/planned-ideas/components/photoLightbox";
 
 const GUIDE_COLLAPSED_HEIGHT = 500;
+const PHOTOS_PAGE_SIZE = 10;
 
 // Guide is stored as GFM markdown with "## <emoji> Title" section headings.
 function splitGuideSections(markdown: string): string[] {
@@ -93,6 +94,7 @@ export function IdeaDetailPanel({
   const [isEditingGuide, setIsEditingGuide] = useState(false);
   const [guideDraft, setGuideDraft] = useState("");
   const [openPhotoIndex, setOpenPhotoIndex] = useState<number | null>(null);
+  const [visiblePhotoCount, setVisiblePhotoCount] = useState(PHOTOS_PAGE_SIZE);
 
   useEffect(() => {
     const el = guideContentRef.current;
@@ -102,6 +104,7 @@ export function IdeaDetailPanel({
 
   useEffect(() => {
     setIsEditingGuide(false);
+    setVisiblePhotoCount(PHOTOS_PAGE_SIZE);
   }, [selectedIdeaView?.id]);
 
   const startEditingGuide = () => {
@@ -318,13 +321,13 @@ export function IdeaDetailPanel({
           <p className="mt-3 text-sm text-red-300">{photoError}</p>
         ) : null}
 
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {teamPhotos.length === 0 ? (
             <p className="col-span-full text-sm text-slate-400">
               No team photos yet. Be the first to share one.
             </p>
           ) : (
-            teamPhotos.map((photo, index) => {
+            teamPhotos.slice(0, visiblePhotoCount).map((photo, index) => {
               const accent = hashAccent(photo.uploadedBy.id);
               return (
                 <figure
@@ -351,6 +354,18 @@ export function IdeaDetailPanel({
             })
           )}
         </div>
+
+        {visiblePhotoCount < teamPhotos.length ? (
+          <button
+            type="button"
+            onClick={() =>
+              setVisiblePhotoCount((prev) => prev + PHOTOS_PAGE_SIZE)
+            }
+            className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-700/40 py-2 text-sm font-semibold text-cyan-300/80 transition hover:border-cyan-400/40 hover:text-cyan-200"
+          >
+            Load more photos
+          </button>
+        ) : null}
       </div>
 
       <PhotoLightbox
