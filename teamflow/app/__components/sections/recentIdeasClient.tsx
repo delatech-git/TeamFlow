@@ -22,15 +22,23 @@ export function RecentIdeasClient({ initialIdeas }: Props) {
   const ideasCount = initialIdeas.length;
   const collaborators = new Set(initialIdeas.map((idea) => idea.createdBy.id)).size;
   const plannedCount = initialIdeas.filter((idea) => idea.status === "PLANNED").length;
-  const teamRating = initialIdeas.length > 0 ? "4.8" : "0.0";
+
+  const allRatings = initialIdeas.flatMap((idea) => idea.ratings ?? []);
+  const teamRating =
+    allRatings.length > 0
+      ? (
+          allRatings.reduce((sum, rating) => sum + rating.value, 0) /
+          allRatings.length
+        ).toFixed(1)
+      : "—";
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)] sm:p-6">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard icon={<Lightbulb size={16} />} label="Ideas Created" value={String(ideasCount)} delta="+12 this week" />
-          <StatCard icon={<Users size={16} />} label="Active Collaborators" value={String(collaborators)} delta="+5 this week" />
-          <StatCard icon={<CalendarDays size={16} />} label="Planned Events" value={String(plannedCount)} delta="+3 this week" />
-          <StatCard icon={<Star size={16} />} label="Team Rating" value={teamRating} delta="+0.3 this week" />
+          <StatCard icon={<Lightbulb size={16} />} label="Ideas Created" value={String(ideasCount)} />
+          <StatCard icon={<Users size={16} />} label="Active Collaborators" value={String(collaborators)} />
+          <StatCard icon={<CalendarDays size={16} />} label="Planned Events" value={String(plannedCount)} />
+          <StatCard icon={<Star size={16} />} label="Team Rating" value={teamRating} />
         </div>
 
         <div className="mt-6">
@@ -93,21 +101,18 @@ function StatCard({
   icon,
   label,
   value,
-  delta,
 }: {
   icon: ReactNode;
   label: string;
   value: string;
-  delta: string;
 }) {
   return (
     <article className="rounded-2xl border border-slate-200 bg-[#fafbff] px-3.5 py-3">
       <div className="mb-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">{icon}</div>
       <p className="text-2xl font-bold leading-none text-slate-900">{value}</p>
       <p className="mt-1.5 text-xs text-slate-500">{label}</p>
-      <p className="mt-1.5 text-xs font-semibold text-emerald-600">{delta}</p>
     </article>
-  ); 
+  );
 }
 
 function AvatarDot({ label }: { label: string }) {

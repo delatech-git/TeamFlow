@@ -28,6 +28,8 @@ export type IdeaResponseDto = {
 
   plannedGuide?: PlannedGuideDto | null;
 
+  ratings?: { value: number }[];
+
   board?: {
     id: string;
     stickers: {

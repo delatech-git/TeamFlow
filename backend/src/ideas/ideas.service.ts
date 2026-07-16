@@ -136,6 +136,9 @@ export class IdeasService {
 
         tags: true,
         plannedGuide: true,
+        ratings: {
+          select: { value: true },
+        },
       },
 
       orderBy: {
