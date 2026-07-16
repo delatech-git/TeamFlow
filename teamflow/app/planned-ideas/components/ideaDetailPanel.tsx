@@ -11,6 +11,7 @@ import {
   hashAccent,
   type Accent,
 } from "@/app/planned-ideas/colorAccents";
+import { PhotoLightbox } from "@/app/planned-ideas/components/photoLightbox";
 
 const GUIDE_COLLAPSED_HEIGHT = 500;
 
@@ -91,6 +92,7 @@ export function IdeaDetailPanel({
   const [guideOverflows, setGuideOverflows] = useState(false);
   const [isEditingGuide, setIsEditingGuide] = useState(false);
   const [guideDraft, setGuideDraft] = useState("");
+  const [openPhotoIndex, setOpenPhotoIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const el = guideContentRef.current;
@@ -322,18 +324,25 @@ export function IdeaDetailPanel({
               No team photos yet. Be the first to share one.
             </p>
           ) : (
-            teamPhotos.map((photo) => {
+            teamPhotos.map((photo, index) => {
               const accent = hashAccent(photo.uploadedBy.id);
               return (
                 <figure
                   key={photo.id}
                   className={`overflow-hidden rounded-xl border ${accent.border} bg-[#08101d]`}
                 >
-                  <img
-                    src={photo.imageUrl}
-                    alt={`Team photo uploaded by ${photo.uploadedBy.fullName || photo.uploadedBy.username}`}
-                    className="h-32 w-full object-cover"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setOpenPhotoIndex(index)}
+                    aria-label={`View photo uploaded by ${photo.uploadedBy.fullName || photo.uploadedBy.username}`}
+                    className="block w-full cursor-zoom-in"
+                  >
+                    <img
+                      src={photo.imageUrl}
+                      alt={`Team photo uploaded by ${photo.uploadedBy.fullName || photo.uploadedBy.username}`}
+                      className="h-32 w-full object-cover transition hover:opacity-80"
+                    />
+                  </button>
                   <figcaption className="px-2 py-1.5 text-[11px] text-slate-400">
                     {photo.uploadedBy.fullName || photo.uploadedBy.username}
                   </figcaption>
@@ -343,6 +352,13 @@ export function IdeaDetailPanel({
           )}
         </div>
       </div>
+
+      <PhotoLightbox
+        photos={teamPhotos}
+        index={openPhotoIndex}
+        onClose={() => setOpenPhotoIndex(null)}
+        onNavigate={setOpenPhotoIndex}
+      />
     </section>
   );
 }
