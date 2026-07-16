@@ -107,6 +107,12 @@ Use pinned notes as the selected final decisions.
 Use unpinned notes only as additional context or inspiration.
 Write clearly, practically, and in a structured way.
 
+Detect the language the pinned notes are written in (e.g. Albanian, English,
+Italian) and write the entire guide in that same language, including section
+titles. If the pinned notes mix languages, use whichever language the pinned
+notes predominantly use. Keep section titles and everyday event terms in that
+language rather than translating them into English.
+
 Output valid GitHub-flavored Markdown only. Follow this exact format:
 - Each of the 10 sections is a level-2 heading, e.g. "## 🎯 Event overview".
 - Use "- " bullet lists under each section for plain points.
@@ -128,7 +134,9 @@ ${pinnedContent}
 Other ideas from the board:
 ${otherContent}
 
-Create a complete planned-event guide.
+Create a complete planned-event guide, written in the same language as the
+pinned ideas above (translate the section titles below into that language
+too — they are listed in English here only to define the required order).
 
 The output must include:
 

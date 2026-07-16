@@ -42,6 +42,7 @@ export type FunDashboardProps = {
   selectedTextItem: FunItem | null;
   selectedShapeItem: FunItem | null;
   selectedTool: SelectedBoardTool | null;
+  isGeneratingGuide: boolean;
   onTogglePinMode: () => void;
   onGenerateSummary: () => void | Promise<void>;
   onSelectTool: (toolKind: FunItem["kind"], value: string) => void;

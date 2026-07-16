@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import FunDashboard from "@/app/__components/idea-board/funDashboard";
+import { LoadingOverlay } from "@/app/__components/ui/loadingOverlay";
 import NotebookPad from "@/app/__components/idea-board/notebookPad";
 import FunCanvasItem from "@/app/__components/idea-board/canvas/funCanvasItem";
 import StickyNoteCard from "@/app/__components/idea-board/canvas/stickyNoteCard";
@@ -47,6 +48,7 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
     togglePinnedNote,
     togglePinMode,
     generateSummaryPreview,
+    isGeneratingGuide,
     startEditingNote,
     saveEditingNote,
     startEditingFunText,
@@ -61,6 +63,10 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
 
   return (
     <div className="space-y-3">
+      <LoadingOverlay
+        visible={isGeneratingGuide}
+        message="Generating your planned guide..."
+      />
       <section className="tf-dashboard-hero tf-dashboard-hero--full tf-animate-in overflow-hidden pb-6 pt-20 sm:pb-8 sm:pt-22 lg:pb-10 lg:pt-24">
         <div className="tf-dashboard-hero__inner relative grid items-start gap-3 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:px-8">
           <div>
@@ -316,6 +322,7 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
         selectedTextItem={selectedTextItem}
         selectedShapeItem={selectedShapeItem}
         selectedTool={selectedBoardTool}
+        isGeneratingGuide={isGeneratingGuide}
         onTogglePinMode={togglePinMode}
         onGenerateSummary={generateSummaryPreview}
         onSelectTool={selectBoardTool}

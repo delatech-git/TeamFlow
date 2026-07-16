@@ -1,6 +1,6 @@
-import { proxyDelete, proxyGetJson, proxyPostJson, proxyPutJson } from "../core/fetch-client";
+import { proxyDelete, proxyGetJson, proxyPatchJson, proxyPostJson, proxyPutJson } from "../core/fetch-client";
 import { getAccessToken } from "../../auth/session";
-import { commentReactionsPath, ideaCommentDetailPath, ideaCommentsPath, ideaPlannedGuidePath, ideaTeamPhotosPath, ideasBoardPath, ideasCreatePath, ideasDetailPath, ideasListPath } from "./paths";
+import { commentReactionsPath, ideaCommentDetailPath, ideaCommentsPath, ideaPlannedGuidePath, ideaRatingsPath, ideaTeamPhotosPath, ideasBoardPath, ideasCreatePath, ideasDetailPath, ideasListPath } from "./paths";
 import type {
   CommentReactionDto,
   CreateIdeaBody,
@@ -8,6 +8,7 @@ import type {
   IdeaCommentDto,
   IdeaResponseDto,
   PlannedGuideDto,
+  RatingsSummaryDto,
   SaveIdeaBoardBody,
   TeamPhotoDto,
 } from "./types";
@@ -18,6 +19,7 @@ export type {
   IdeaCommentDto,
   IdeaResponseDto,
   PlannedGuideDto,
+  RatingsSummaryDto,
   TeamPhotoDto,
 };
 
@@ -139,6 +141,30 @@ export async function updatePlannedGuide(
   );
 }
 
+export async function getIdeaRatings(id: string): Promise<RatingsSummaryDto> {
+  return proxyGetJson<RatingsSummaryDto>(ideaRatingsPath(id), {
+    errorMessage: "Failed to fetch ratings",
+  });
+}
+
+export async function rateIdea(
+  id: string,
+  value: number,
+): Promise<RatingsSummaryDto["ratings"][number]> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+  return proxyPutJson<RatingsSummaryDto["ratings"][number], { value: number }>(
+    ideaRatingsPath(id),
+    { value },
+    {
+      errorMessage: "Could not save your rating",
+      init: { headers: { Authorization: `Bearer ${token}` } },
+    },
+  );
+}
+
 export async function getIdeaComments(id: string): Promise<IdeaCommentDto[]> {
   return proxyGetJson<IdeaCommentDto[]>(ideaCommentsPath(id), {
     errorMessage: "Failed to fetch comments",
@@ -221,6 +247,25 @@ export async function toggleCommentReaction(
     { emoji },
     {
       errorMessage: "Could not react to comment",
+      init: { headers: { Authorization: `Bearer ${token}` } },
+    },
+  );
+}
+
+export async function updateIdeaComment(
+  ideaId: string,
+  commentId: string,
+  content: string,
+): Promise<IdeaCommentDto> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+  return proxyPatchJson<IdeaCommentDto, { content: string }>(
+    ideaCommentDetailPath(ideaId, commentId),
+    { content },
+    {
+      errorMessage: "Could not update comment",
       init: { headers: { Authorization: `Bearer ${token}` } },
     },
   );

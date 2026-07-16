@@ -10,6 +10,7 @@ export function SummaryPanel({
   notes,
   postedDecisionId,
   plannedIdeasHref,
+  isGeneratingGuide,
   onTogglePinMode,
   onGenerateSummary,
 }: {
@@ -19,6 +20,7 @@ export function SummaryPanel({
   notes: StickyNote[];
   postedDecisionId: string | null;
   plannedIdeasHref: string;
+  isGeneratingGuide: boolean;
   onTogglePinMode: () => void;
   onGenerateSummary: () => void | Promise<void>;
 }) {
@@ -78,11 +80,11 @@ export function SummaryPanel({
 
       <button
         type="button"
-        disabled={pinnedNoteIds.length === 0}
+        disabled={pinnedNoteIds.length === 0 || isGeneratingGuide}
         onClick={onGenerateSummary}
         className="tf-board-summary-btn mt-3 w-full disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Generate planned guide
+        {isGeneratingGuide ? "Generating..." : "Generate planned guide"}
       </button>
       {postedDecisionId ? (
         <div className="tf-board-posted-box mt-2">

@@ -6,11 +6,13 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
 import {
   CurrentUser,
   CurrentUserPayload,
@@ -34,6 +36,17 @@ export class CommentsController {
     @CurrentUser() user: CurrentUserPayload,
   ) {
     return this.commentsService.create(ideaId, dto, user.id);
+  }
+
+  @Patch(':commentId')
+  @UseGuards(JwtAuthGuard)
+  update(
+    @Param('ideaId') ideaId: string,
+    @Param('commentId') commentId: string,
+    @Body() dto: UpdateCommentDto,
+    @CurrentUser() user: CurrentUserPayload,
+  ) {
+    return this.commentsService.update(ideaId, commentId, user.id, dto);
   }
 
   @Delete(':commentId')

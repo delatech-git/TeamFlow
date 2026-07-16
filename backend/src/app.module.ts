@@ -9,6 +9,7 @@ import { BoardsModule } from './boards/boards.module';
 import { StickersModule } from './stickers/stickers.module';
 import { CommentsModule } from './comments/comments.module';
 import { ReactionsModule } from './reactions/reactions.module';
+import { RatingsModule } from './ratings/ratings.module';
 import { AiModule } from './ai/ai.module';
 import { RolesModule } from './roles/roles.module';
 
@@ -26,6 +27,7 @@ import { PrismaModule } from './prisma/prisma.module';
     StickersModule,
     CommentsModule,
     ReactionsModule,
+    RatingsModule,
     AiModule,
     RolesModule,
     CommonModule,

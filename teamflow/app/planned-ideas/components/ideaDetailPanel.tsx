@@ -7,8 +7,8 @@ import type { Components } from "react-markdown";
 import type { PlannedIdeaCard } from "@/app/planned-ideas/types";
 import type { TeamPhotoDto } from "@/src/infrastructure/api/ideas/client";
 import {
+  accentForIndex,
   hashAccent,
-  sectionAccent,
   type Accent,
 } from "@/app/planned-ideas/colorAccents";
 
@@ -241,7 +241,7 @@ export function IdeaDetailPanel({
               <div ref={guideContentRef} className="space-y-4">
                 {plannedGuideSections.length > 0 ? (
                   plannedGuideSections.map((section, index) => {
-                    const accent = sectionAccent(section);
+                    const accent = accentForIndex(index);
                     return (
                       <article
                         key={`${section.slice(0, 30)}-${index}`}

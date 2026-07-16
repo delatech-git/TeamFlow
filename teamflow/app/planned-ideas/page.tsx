@@ -6,6 +6,7 @@ import { usePlannedIdeas } from "@/app/planned-ideas/usePlannedIdeas";
 import { IdeaListPanel } from "@/app/planned-ideas/components/ideaListPanel";
 import { IdeaDetailPanel } from "@/app/planned-ideas/components/ideaDetailPanel";
 import { DiscussionPanel } from "@/app/planned-ideas/components/discussionPanel";
+import { RatingPanel } from "@/app/planned-ideas/components/ratingPanel";
 
 export default function PlannedIdeasPage() {
   const searchParams = useSearchParams();
@@ -26,16 +27,21 @@ export default function PlannedIdeasPage() {
     photoError,
     currentUser,
     deletingCommentId,
+    editingCommentId,
     selectedIdeaView,
     teamPhotos,
     savingGuide,
     guideError,
+    ratings,
+    submittingRating,
     handleTeamPhotoUpload,
     handleSavePlannedGuide,
     handlePostComment,
     handlePostReply,
     handleDeleteComment,
+    handleEditComment,
     handleToggleReaction,
+    handleRateIdea,
   } = usePlannedIdeas(selectedIdeaFromQuery);
 
   return (
@@ -52,7 +58,7 @@ export default function PlannedIdeasPage() {
 
         <BackToDashboardLink />
       </div>
-      <div className="mx-auto grid max-w-425 gap-4 lg:grid-cols-[320px_minmax(0,1fr)_340px]">
+      <div className="mx-auto grid max-w-425 gap-4 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
         <IdeaListPanel
           ideas={ideas}
           selectedIdeaId={selectedIdeaId}
@@ -73,22 +79,33 @@ export default function PlannedIdeasPage() {
           onSavePlannedGuide={handleSavePlannedGuide}
         />
 
-        <DiscussionPanel
-          commentDraft={commentDraft}
-          onCommentDraftChange={setCommentDraft}
-          onPostComment={handlePostComment}
-          postingComment={postingComment}
-          postingReplyId={postingReplyId}
-          onPostReply={handlePostReply}
-          selectedIdeaId={selectedIdeaId}
-          loadingDetails={loadingDetails}
-          comments={comments}
-          currentUserId={currentUser?.id ?? null}
-          isAdmin={currentUser?.role === "ADMIN"}
-          deletingCommentId={deletingCommentId}
-          onDeleteComment={handleDeleteComment}
-          onToggleReaction={handleToggleReaction}
-        />
+        <div className="space-y-4">
+          <RatingPanel
+            ratings={ratings}
+            currentUserId={currentUser?.id ?? null}
+            submitting={submittingRating}
+            onRate={handleRateIdea}
+          />
+
+          <DiscussionPanel
+            commentDraft={commentDraft}
+            onCommentDraftChange={setCommentDraft}
+            onPostComment={handlePostComment}
+            postingComment={postingComment}
+            postingReplyId={postingReplyId}
+            onPostReply={handlePostReply}
+            selectedIdeaId={selectedIdeaId}
+            loadingDetails={loadingDetails}
+            comments={comments}
+            currentUserId={currentUser?.id ?? null}
+            isAdmin={currentUser?.role === "ADMIN"}
+            deletingCommentId={deletingCommentId}
+            editingCommentId={editingCommentId}
+            onDeleteComment={handleDeleteComment}
+            onEditComment={handleEditComment}
+            onToggleReaction={handleToggleReaction}
+          />
+        </div>
       </div>
     </section>
   );

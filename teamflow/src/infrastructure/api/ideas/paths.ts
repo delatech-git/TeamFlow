@@ -20,6 +20,10 @@ export function ideaPlannedGuidePath(id: string): string {
   return buildProxyPath(["ideas", id, "planned-guide"]);
 }
 
+export function ideaRatingsPath(id: string): string {
+  return buildProxyPath(["ideas", id, "ratings"]);
+}
+
 export function ideaCommentsPath(id: string): string {
   return buildProxyPath(["ideas", id, "comments"]);
 }

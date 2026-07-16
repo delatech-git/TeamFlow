@@ -107,3 +107,23 @@ export type IdeaCommentDto = {
   };
   reactions: CommentReactionDto[];
 };
+
+export type RatingDto = {
+  id: string;
+  value: number;
+  ideaId: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    id: string;
+    username: string;
+    fullName?: string | null;
+  };
+};
+
+export type RatingsSummaryDto = {
+  average: number;
+  count: number;
+  ratings: RatingDto[];
+};

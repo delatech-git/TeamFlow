@@ -5,11 +5,15 @@ import {
   deleteIdeaComment,
   getIdeaById,
   getIdeaComments,
+  getIdeaRatings,
   getIdeas,
+  rateIdea,
   toggleCommentReaction,
+  updateIdeaComment,
   updatePlannedGuide,
   type IdeaCommentDto,
   type IdeaResponseDto,
+  type RatingsSummaryDto,
   type TeamPhotoDto,
 } from "@/src/infrastructure/api/ideas/client";
 import { fetchCurrentUser } from "@/src/infrastructure/api/auth/client";
@@ -36,8 +40,11 @@ export function usePlannedIdeas(selectedIdeaFromQuery: string | null) {
     null,
   );
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [savingGuide, setSavingGuide] = useState(false);
   const [guideError, setGuideError] = useState("");
+  const [ratings, setRatings] = useState<RatingsSummaryDto | null>(null);
+  const [submittingRating, setSubmittingRating] = useState(false);
 
   useEffect(() => {
     if (!getAccessToken()) return;
@@ -86,23 +93,27 @@ export function usePlannedIdeas(selectedIdeaFromQuery: string | null) {
     if (!selectedIdeaId) {
       setSelectedIdeaDetails(null);
       setComments([]);
+      setRatings(null);
       return;
     }
     let cancelled = false;
     setLoadingDetails(true);
     void (async () => {
       try {
-        const [idea, ideaComments] = await Promise.all([
+        const [idea, ideaComments, ideaRatings] = await Promise.all([
           getIdeaById(selectedIdeaId),
           getIdeaComments(selectedIdeaId),
+          getIdeaRatings(selectedIdeaId),
         ]);
         if (cancelled) return;
         setSelectedIdeaDetails(idea);
         setComments(ideaComments);
+        setRatings(ideaRatings);
       } catch {
         if (!cancelled) {
           setSelectedIdeaDetails(null);
           setComments([]);
+          setRatings(null);
         }
       } finally {
         if (!cancelled) {
@@ -189,6 +200,27 @@ export function usePlannedIdeas(selectedIdeaFromQuery: string | null) {
     }
   };
 
+  const handleRateIdea = async (value: number) => {
+    if (!selectedIdeaId) return;
+    if (!getAccessToken()) {
+      window.alert("Please log in to rate this idea.");
+      return;
+    }
+
+    setSubmittingRating(true);
+    try {
+      await rateIdea(selectedIdeaId, value);
+      const refreshed = await getIdeaRatings(selectedIdeaId);
+      setRatings(refreshed);
+    } catch (err) {
+      window.alert(
+        err instanceof Error ? err.message : "Could not save your rating.",
+      );
+    } finally {
+      setSubmittingRating(false);
+    }
+  };
+
   const postComment = async (content: string, parentId?: string) => {
     if (!selectedIdeaId || !content.trim()) return;
     if (!getAccessToken()) {
@@ -250,6 +282,30 @@ export function usePlannedIdeas(selectedIdeaFromQuery: string | null) {
     }
   };
 
+  const handleEditComment = async (commentId: string, content: string) => {
+    if (!selectedIdeaId || !content.trim()) return false;
+
+    setEditingCommentId(commentId);
+    try {
+      const updated = await updateIdeaComment(
+        selectedIdeaId,
+        commentId,
+        content.trim(),
+      );
+      setComments((prev) =>
+        prev.map((comment) => (comment.id === commentId ? updated : comment)),
+      );
+      return true;
+    } catch (err) {
+      window.alert(
+        err instanceof Error ? err.message : "Could not update comment.",
+      );
+      return false;
+    } finally {
+      setEditingCommentId(null);
+    }
+  };
+
   const handleToggleReaction = async (commentId: string, emoji: string) => {
     if (!getAccessToken()) {
       window.alert("Please log in to react to a comment.");
@@ -294,15 +350,20 @@ export function usePlannedIdeas(selectedIdeaFromQuery: string | null) {
     photoError,
     currentUser,
     deletingCommentId,
+    editingCommentId,
     selectedIdeaView,
     teamPhotos,
     savingGuide,
     guideError,
+    ratings,
+    submittingRating,
     handleTeamPhotoUpload,
     handleSavePlannedGuide,
     handlePostComment,
     handlePostReply,
     handleDeleteComment,
+    handleEditComment,
     handleToggleReaction,
+    handleRateIdea,
   };
 }

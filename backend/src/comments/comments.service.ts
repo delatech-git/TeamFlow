@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Injectable()
 export class CommentsService {
@@ -47,6 +48,36 @@ export class CommentsService {
 
       orderBy: {
         createdAt: 'asc',
+      },
+    });
+  }
+
+  async update(
+    ideaId: string,
+    commentId: string,
+    userId: string,
+    dto: UpdateCommentDto,
+  ) {
+    if (typeof dto.content !== 'string' || dto.content.trim().length === 0) {
+      throw new BadRequestException('Content is required');
+    }
+
+    const comment = await this.prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+    if (!comment || comment.ideaId !== ideaId) {
+      throw new NotFoundException('Comment not found');
+    }
+    if (comment.authorId !== userId) {
+      throw new ForbiddenException('You can only edit your own comments');
+    }
+
+    return this.prisma.comment.update({
+      where: { id: commentId },
+      data: { content: dto.content.trim() },
+      include: {
+        author: true,
+        reactions: { include: { user: true } },
       },
     });
   }

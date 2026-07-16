@@ -105,6 +105,7 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
   const [selectedBoardTool, setSelectedBoardTool] =
     useState<SelectedBoardTool | null>(null);
   const [currentUserName, setCurrentUserName] = useState("Teammate");
+  const [isGeneratingGuide, setIsGeneratingGuide] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -394,6 +395,7 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
       return;
     }
 
+    setIsGeneratingGuide(true);
     try {
       await saveIdeaBoard(idea.id, {
         notes,
@@ -422,6 +424,8 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
           ? error.message
           : "Could not generate planned guide.",
       );
+    } finally {
+      setIsGeneratingGuide(false);
     }
   };
 
@@ -886,6 +890,7 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
     togglePinnedNote,
     togglePinMode,
     generateSummaryPreview,
+    isGeneratingGuide,
     startEditingNote,
     saveEditingNote,
     startEditingFunText,

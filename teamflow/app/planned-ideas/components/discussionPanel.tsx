@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CornerDownRight, SmilePlus, Trash2 } from "lucide-react";
+import { CornerDownRight, Pencil, SmilePlus, Trash2 } from "lucide-react";
 import type { IdeaCommentDto } from "@/src/infrastructure/api/ideas/client";
 import { hashAccent } from "@/app/planned-ideas/colorAccents";
 
@@ -145,6 +145,61 @@ function DeleteCommentButton({
   );
 }
 
+function EditCommentButton({ onEdit }: { onEdit: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onEdit}
+      aria-label="Edit comment"
+      className="shrink-0 text-slate-500 transition hover:text-cyan-300"
+    >
+      <Pencil size={13} aria-hidden />
+    </button>
+  );
+}
+
+function CommentEditForm({
+  initialContent,
+  onSubmit,
+  onCancel,
+  saving,
+}: {
+  initialContent: string;
+  onSubmit: (content: string) => void;
+  onCancel: () => void;
+  saving: boolean;
+}) {
+  const [draft, setDraft] = useState(initialContent);
+
+  return (
+    <div className="mt-1.5 rounded-lg border border-slate-700/40 bg-[#081120] p-2">
+      <textarea
+        autoFocus
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        className="min-h-14 w-full resize-none bg-transparent text-sm text-slate-200 outline-none"
+      />
+      <div className="flex justify-end gap-2 border-t border-slate-700/40 pt-1.5">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="rounded-lg px-2.5 py-1 text-xs text-slate-400 hover:text-slate-200"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          disabled={saving || draft.trim().length === 0}
+          onClick={() => onSubmit(draft)}
+          className="rounded-lg bg-linear-to-r from-cyan-500 to-blue-600 px-2.5 py-1 text-xs font-semibold text-white shadow-[0_0_12px_rgba(34,211,238,0.3)] transition hover:shadow-[0_0_18px_rgba(34,211,238,0.45)] disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          {saving ? "Saving..." : "Save"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function CommentReplyForm({
   onSubmit,
   onCancel,
@@ -196,6 +251,11 @@ function CommentItem({
   canDeleteComment,
   deletingCommentId,
   onDeleteComment,
+  canEditComment,
+  editingId,
+  savingCommentId,
+  onToggleEdit,
+  onSubmitEdit,
   currentUserId,
   onToggleReaction,
 }: {
@@ -208,6 +268,11 @@ function CommentItem({
   canDeleteComment: (comment: IdeaCommentDto) => boolean;
   deletingCommentId: string | null;
   onDeleteComment: (commentId: string) => void;
+  canEditComment: (comment: IdeaCommentDto) => boolean;
+  editingId: string | null;
+  savingCommentId: string | null;
+  onToggleEdit: (commentId: string) => void;
+  onSubmitEdit: (commentId: string, content: string) => void;
   currentUserId: string | null;
   onToggleReaction: (commentId: string, emoji: string) => void;
 }) {
@@ -227,6 +292,9 @@ function CommentItem({
               <span className="text-[11px] text-slate-500">
                 {formatRelativeTime(comment.createdAt)}
               </span>
+              {canEditComment(comment) ? (
+                <EditCommentButton onEdit={() => onToggleEdit(comment.id)} />
+              ) : null}
               {canDeleteComment(comment) ? (
                 <DeleteCommentButton
                   onDelete={() => onDeleteComment(comment.id)}
@@ -235,9 +303,18 @@ function CommentItem({
               ) : null}
             </div>
           </div>
-          <p className="mt-0.5 text-sm leading-6 text-slate-300">
-            {comment.content}
-          </p>
+          {editingId === comment.id ? (
+            <CommentEditForm
+              initialContent={comment.content}
+              onSubmit={(content) => onSubmitEdit(comment.id, content)}
+              onCancel={() => onToggleEdit(comment.id)}
+              saving={savingCommentId === comment.id}
+            />
+          ) : (
+            <p className="mt-0.5 text-sm leading-6 text-slate-300">
+              {comment.content}
+            </p>
+          )}
           <CommentReactions
             comment={comment}
             currentUserId={currentUserId}
@@ -285,6 +362,11 @@ function CommentItem({
                           <span className="text-[10px] text-slate-500">
                             {formatRelativeTime(reply.createdAt)}
                           </span>
+                          {canEditComment(reply) ? (
+                            <EditCommentButton
+                              onEdit={() => onToggleEdit(reply.id)}
+                            />
+                          ) : null}
                           {canDeleteComment(reply) ? (
                             <DeleteCommentButton
                               onDelete={() => onDeleteComment(reply.id)}
@@ -293,9 +375,18 @@ function CommentItem({
                           ) : null}
                         </div>
                       </div>
-                      <p className="mt-0.5 text-sm leading-6 text-slate-300">
-                        {reply.content}
-                      </p>
+                      {editingId === reply.id ? (
+                        <CommentEditForm
+                          initialContent={reply.content}
+                          onSubmit={(content) => onSubmitEdit(reply.id, content)}
+                          onCancel={() => onToggleEdit(reply.id)}
+                          saving={savingCommentId === reply.id}
+                        />
+                      ) : (
+                        <p className="mt-0.5 text-sm leading-6 text-slate-300">
+                          {reply.content}
+                        </p>
+                      )}
                       <CommentReactions
                         comment={reply}
                         currentUserId={currentUserId}
@@ -326,7 +417,9 @@ export function DiscussionPanel({
   currentUserId,
   isAdmin,
   deletingCommentId,
+  editingCommentId,
   onDeleteComment,
+  onEditComment,
   onToggleReaction,
 }: {
   commentDraft: string;
@@ -341,14 +434,19 @@ export function DiscussionPanel({
   currentUserId: string | null;
   isAdmin: boolean;
   deletingCommentId: string | null;
+  editingCommentId: string | null;
   onDeleteComment: (commentId: string) => void;
+  onEditComment: (commentId: string, content: string) => Promise<boolean>;
   onToggleReaction: (commentId: string, emoji: string) => void;
 }) {
   const [openReplyId, setOpenReplyId] = useState<string | null>(null);
+  const [openEditId, setOpenEditId] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(COMMENTS_PAGE_SIZE);
   const topLevelComments = comments.filter((comment) => !comment.parentId);
   const canDeleteComment = (comment: IdeaCommentDto) =>
     isAdmin || (currentUserId !== null && comment.author.id === currentUserId);
+  const canEditComment = (comment: IdeaCommentDto) =>
+    currentUserId !== null && comment.author.id === currentUserId;
 
   useEffect(() => {
     setVisibleCount(COMMENTS_PAGE_SIZE);
@@ -415,6 +513,16 @@ export function DiscussionPanel({
             canDeleteComment={canDeleteComment}
             deletingCommentId={deletingCommentId}
             onDeleteComment={onDeleteComment}
+            canEditComment={canEditComment}
+            editingId={openEditId}
+            savingCommentId={editingCommentId}
+            onToggleEdit={(commentId) =>
+              setOpenEditId((prev) => (prev === commentId ? null : commentId))
+            }
+            onSubmitEdit={async (commentId, content) => {
+              const saved = await onEditComment(commentId, content);
+              if (saved) setOpenEditId(null);
+            }}
             currentUserId={currentUserId}
             onToggleReaction={onToggleReaction}
           />

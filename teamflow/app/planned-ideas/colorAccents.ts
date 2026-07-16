@@ -24,29 +24,8 @@ export function hashAccent(key: string): Accent {
   return PALETTE[Math.abs(hash) % PALETTE.length];
 }
 
-const SECTION_KEYWORD_ACCENTS: [string, Accent][] = [
-  ["overview", PALETTE[0]],
-  ["concept", PALETTE[1]],
-  ["decision", PALETTE[2]],
-  ["location", PALETTE[3]],
-  ["setup", PALETTE[3]],
-  ["food", PALETTE[2]],
-  ["drink", PALETTE[2]],
-  ["entertainment", PALETTE[1]],
-  ["activity", PALETTE[1]],
-  ["decoration", PALETTE[6]],
-  ["atmosphere", PALETTE[6]],
-  ["role", PALETTE[5]],
-  ["respons", PALETTE[5]],
-  ["timeline", PALETTE[0]],
-  ["checklist", PALETTE[4]],
-  ["action", PALETTE[4]],
-];
-
-export function sectionAccent(section: string): Accent {
-  const normalized = section.toLowerCase();
-  for (const [keyword, accent] of SECTION_KEYWORD_ACCENTS) {
-    if (normalized.includes(keyword)) return accent;
-  }
-  return PALETTE[0];
+// The guide always has its 10 sections in the same fixed order, so cycling
+// by position works regardless of what language the section titles are in.
+export function accentForIndex(index: number): Accent {
+  return PALETTE[index % PALETTE.length];
 }
