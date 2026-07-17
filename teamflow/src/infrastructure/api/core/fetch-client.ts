@@ -134,7 +134,8 @@ export async function proxyDelete(
   }
 }
 
-export async function proxyPostFormData<TResponse>(
+async function proxyFormData<TResponse>(
+  method: "POST" | "PATCH",
   proxyPath: string,
   formData: FormData,
   options?: { errorMessage?: string; init?: RequestInit },
@@ -149,7 +150,7 @@ export async function proxyPostFormData<TResponse>(
 
   const res = await proxyFetch(proxyPath, {
     ...extraInit,
-    method: "POST",
+    method,
     headers,
     body: formData,
   });
@@ -162,4 +163,20 @@ export async function proxyPostFormData<TResponse>(
   }
 
   return res.json();
+}
+
+export async function proxyPostFormData<TResponse>(
+  proxyPath: string,
+  formData: FormData,
+  options?: { errorMessage?: string; init?: RequestInit },
+): Promise<TResponse> {
+  return proxyFormData<TResponse>("POST", proxyPath, formData, options);
+}
+
+export async function proxyPatchFormData<TResponse>(
+  proxyPath: string,
+  formData: FormData,
+  options?: { errorMessage?: string; init?: RequestInit },
+): Promise<TResponse> {
+  return proxyFormData<TResponse>("PATCH", proxyPath, formData, options);
 }

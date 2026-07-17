@@ -389,6 +389,58 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
     ],
   );
 
+  const duplicateStickyNote = useCallback(
+    (noteId: string) => {
+      const original = notes.find((note) => note.id === noteId);
+      if (!original) return;
+
+      const newId = `${idea.slug}-${Date.now()}-copy`;
+      const nextX = clamp(original.x + 20, 8, CANVAS_WIDTH - original.width - 8);
+      const nextY = clamp(original.y + 20, 8, CANVAS_HEIGHT - original.height - 8);
+      const copy: StickyNote = {
+        ...original,
+        id: newId,
+        x: Math.round(nextX),
+        y: Math.round(nextY),
+      };
+
+      setNotes((prev) => [...prev, copy]);
+      setSelectedCanvasItem({ kind: "note", id: newId });
+    },
+    [notes, idea.slug],
+  );
+
+  const duplicateFunItem = useCallback(
+    (itemId: string) => {
+      const original = funItems.find((item) => item.id === itemId);
+      if (!original) return;
+
+      const newId = `${idea.slug}-fun-${Date.now()}-copy`;
+      const nextX = clamp(original.x + 20, 8, CANVAS_WIDTH - original.width - 8);
+      const nextY = clamp(original.y + 20, 8, CANVAS_HEIGHT - original.height - 8);
+      const copy = {
+        ...original,
+        id: newId,
+        x: Math.round(nextX),
+        y: Math.round(nextY),
+      } as FunItem;
+
+      setFunItems((prev) => [...prev, copy]);
+      setSelectedCanvasItem({ kind: "fun", id: newId });
+      if (copy.kind === "text") {
+        setSelectedTextItemId(newId);
+        setSelectedShapeItemId(null);
+      } else if (copy.kind === "shape") {
+        setSelectedShapeItemId(newId);
+        setSelectedTextItemId(null);
+      } else {
+        setSelectedTextItemId(null);
+        setSelectedShapeItemId(null);
+      }
+    },
+    [funItems, idea.slug],
+  );
+
   const generateSummaryPreview = async () => {
     if (pinnedNoteIds.length === 0) {
       window.alert("Please pin at least one idea before generating the planned guide.");
@@ -745,8 +797,11 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
   }, [rotateState]);
 
   useEffect(() => {
-    const handleDeleteKey = (event: KeyboardEvent) => {
-      if (event.key !== "Delete" && event.key !== "Backspace") return;
+    const handleBoardKeyDown = (event: KeyboardEvent) => {
+      const isDeleteKey = event.key === "Delete" || event.key === "Backspace";
+      const isDuplicateShortcut =
+        (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "d";
+      if (!isDeleteKey && !isDuplicateShortcut) return;
       if (!selectedCanvasItem) return;
       if (editingNoteId || editingFunTextId) return;
 
@@ -763,6 +818,15 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
       }
 
       event.preventDefault();
+      if (isDuplicateShortcut) {
+        if (selectedCanvasItem.kind === "note") {
+          duplicateStickyNote(selectedCanvasItem.id);
+        } else {
+          duplicateFunItem(selectedCanvasItem.id);
+        }
+        return;
+      }
+
       if (selectedCanvasItem.kind === "note") {
         deleteStickyNote(selectedCanvasItem.id);
       } else {
@@ -770,9 +834,9 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
       }
     };
 
-    window.addEventListener("keydown", handleDeleteKey);
+    window.addEventListener("keydown", handleBoardKeyDown);
     return () => {
-      window.removeEventListener("keydown", handleDeleteKey);
+      window.removeEventListener("keydown", handleBoardKeyDown);
     };
   }, [
     selectedCanvasItem,
@@ -780,6 +844,8 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
     editingFunTextId,
     deleteFunItem,
     deleteStickyNote,
+    duplicateStickyNote,
+    duplicateFunItem,
   ]);
 
   const selectedTextItem =
@@ -891,6 +957,8 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
     togglePinMode,
     generateSummaryPreview,
     isGeneratingGuide,
+    duplicateStickyNote,
+    duplicateFunItem,
     startEditingNote,
     saveEditingNote,
     startEditingFunText,

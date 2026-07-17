@@ -1,5 +1,5 @@
-import { proxyGetJson, proxyPostJson, proxyPostFormData  } from "../core/fetch-client";
-import { authLoginPath, authMePath, authRegisterPath } from "./paths";
+import { proxyGetJson, proxyPostJson, proxyPostFormData, proxyPatchFormData } from "../core/fetch-client";
+import { authLoginPath, authMeAvatarPath, authMePath, authRegisterPath } from "./paths";
 import type {
   AuthUser,
   LoginBody,
@@ -86,11 +86,6 @@ export function clearSession(): void {
   clearAccessToken();
 }
 
-
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-console.log("API_URL:", API_URL);
-
 export async function uploadMyAvatar(file: File) {
   const token = getAccessToken();
 
@@ -101,18 +96,8 @@ export async function uploadMyAvatar(file: File) {
   const formData = new FormData();
   formData.append('avatar', file);
 
-  const response = await fetch(`${API_URL}/auth/me/avatar`, {
-    method: 'PATCH',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
+  return proxyPatchFormData<MeUser>(authMeAvatarPath(), formData, {
+    errorMessage: "Avatar upload failed",
+    init: { headers: { Authorization: `Bearer ${token}` } },
   });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => null);
-    throw new Error(error?.message ?? 'Avatar upload failed');
-  }
-
-  return response.json();
 }

@@ -49,6 +49,8 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
     togglePinMode,
     generateSummaryPreview,
     isGeneratingGuide,
+    duplicateStickyNote,
+    duplicateFunItem,
     startEditingNote,
     saveEditingNote,
     startEditingFunText,
@@ -220,6 +222,7 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
                       onStartRotate={(event) =>
                         startRotate("note", note, event)
                       }
+                      onDuplicate={() => duplicateStickyNote(note.id)}
                     />
                   );
                 })}
@@ -303,6 +306,7 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
                         );
                       }}
                       onStartRotate={(event) => startRotate("fun", item, event)}
+                      onDuplicate={() => duplicateFunItem(item.id)}
                     />
                   );
                 })}

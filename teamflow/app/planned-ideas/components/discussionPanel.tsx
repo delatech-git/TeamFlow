@@ -104,19 +104,33 @@ function authorName(author: IdeaCommentDto["author"]): string {
 function CommentAvatar({
   name,
   accentKey,
+  avatarUrl,
   size = "md",
 }: {
   name: string;
   accentKey: string;
+  avatarUrl?: string | null;
   size?: "md" | "sm";
 }) {
   const accent = hashAccent(accentKey);
+  const sizeClass = size === "md" ? "h-8 w-8 text-xs" : "h-6 w-6 text-[11px]";
+
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name}
+        className={`shrink-0 rounded-full object-cover shadow-md ${sizeClass}`}
+      />
+    );
+  }
+
   return (
     <span
       className={[
         "flex shrink-0 items-center justify-center rounded-full font-semibold text-white shadow-md",
         accent.solidBg,
-        size === "md" ? "h-8 w-8 text-xs" : "h-6 w-6 text-[11px]",
+        sizeClass,
       ].join(" ")}
       aria-hidden
     >
@@ -282,7 +296,11 @@ function CommentItem({
   return (
     <article className={`rounded-xl border bg-[#0e1728] p-3 ${accent.border}`}>
       <div className="flex gap-2.5">
-        <CommentAvatar name={name} accentKey={comment.author.id} />
+        <CommentAvatar
+          name={name}
+          accentKey={comment.author.id}
+          avatarUrl={comment.author.avatarUrl}
+        />
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <p className="truncate text-sm font-semibold text-slate-100">
@@ -351,6 +369,7 @@ function CommentItem({
                     <CommentAvatar
                       name={replyName}
                       accentKey={reply.author.id}
+                      avatarUrl={reply.author.avatarUrl}
                       size="sm"
                     />
                     <div className="min-w-0 flex-1">

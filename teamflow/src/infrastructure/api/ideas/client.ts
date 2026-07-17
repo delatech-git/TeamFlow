@@ -1,4 +1,4 @@
-import { proxyDelete, proxyGetJson, proxyPatchJson, proxyPostJson, proxyPutJson } from "../core/fetch-client";
+import { proxyDelete, proxyGetJson, proxyPatchJson, proxyPostFormData, proxyPostJson, proxyPutJson } from "../core/fetch-client";
 import { getAccessToken } from "../../auth/session";
 import { commentReactionsPath, ideaCommentDetailPath, ideaCommentsPath, ideaPlannedGuidePath, ideaRatingsPath, ideaTeamPhotosPath, ideasBoardPath, ideasCreatePath, ideasDetailPath, ideasListPath } from "./paths";
 import type {
@@ -22,8 +22,6 @@ export type {
   RatingsSummaryDto,
   TeamPhotoDto,
 };
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function getIdeas(
   status?: string,
@@ -52,40 +50,10 @@ export async function createIdea(
     formData.append("coverImage", body.coverImageFile);
   }
 
-  const response = await fetch(`${API_URL}/ideas`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
+  return proxyPostFormData<IdeaResponseDto>(ideasCreatePath(), formData, {
+    errorMessage: "Could not create idea",
+    init: { headers: { Authorization: `Bearer ${token}` } },
   });
-
-  const rawText = await response.text();
-
-  let result: unknown = null;
-
-  try {
-    result = rawText ? JSON.parse(rawText) : null;
-  } catch {
-    result = null;
-  }
-
-  if (!response.ok) {
-    const message =
-      typeof result === "object" &&
-      result !== null &&
-      "message" in result
-        ? (result as { message?: string | string[] }).message
-        : null;
-
-    throw new Error(
-      Array.isArray(message)
-        ? message.join(", ")
-        : message || rawText || "Could not create idea",
-    );
-  }
-
-  return result as IdeaResponseDto;
 }
 
 export async function getIdeaById(id: string): Promise<IdeaResponseDto> {
@@ -183,37 +151,10 @@ export async function addTeamPhoto(
   const formData = new FormData();
   formData.append("photo", photo);
 
-  const response = await fetch(ideaTeamPhotosPath(id), {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
+  return proxyPostFormData<TeamPhotoDto>(ideaTeamPhotosPath(id), formData, {
+    errorMessage: "Could not upload team photo",
+    init: { headers: { Authorization: `Bearer ${token}` } },
   });
-
-  const rawText = await response.text();
-
-  let result: unknown = null;
-  try {
-    result = rawText ? JSON.parse(rawText) : null;
-  } catch {
-    result = null;
-  }
-
-  if (!response.ok) {
-    const message =
-      typeof result === "object" && result !== null && "message" in result
-        ? (result as { message?: string | string[] }).message
-        : null;
-
-    throw new Error(
-      Array.isArray(message)
-        ? message.join(", ")
-        : message || rawText || "Could not upload team photo",
-    );
-  }
-
-  return result as TeamPhotoDto;
 }
 
 export async function createIdeaComment(
