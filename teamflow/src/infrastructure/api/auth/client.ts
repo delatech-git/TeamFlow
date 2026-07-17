@@ -1,4 +1,4 @@
-import { proxyGetJson, proxyPostJson, proxyPostFormData, proxyPatchFormData } from "../core/fetch-client";
+import { proxyGetJson, proxyPostJson, proxyPatchFormData } from "../core/fetch-client";
 import { authLoginPath, authMeAvatarPath, authMePath, authRegisterPath } from "./paths";
 import type {
   AuthUser,
@@ -17,9 +17,6 @@ export type {
   MeUser,
   RegisterBody,
   RegisterResponse,
-};
-export type RegisterWithAvatarBody = RegisterBody & {
-  avatarFile: File;
 };
 
 /** Sign in and persist JWT for later API calls. */
@@ -44,29 +41,6 @@ export async function registerAccount(
     body,
     { errorMessage: "Could not create account" },
   );
-}
-
-/** Register with avatar in one request and persist JWT. */
-export async function registerAndSignIn(
-  body: RegisterWithAvatarBody,
-): Promise<LoginResponse> {
-  const formData = new FormData();
-
-  formData.append("username", body.username);
-  formData.append("email", body.email);
-  formData.append("fullName", body.fullName);
-  formData.append("password", body.password);
-  formData.append("avatar", body.avatarFile);
-
-  const data = await proxyPostFormData<LoginResponse>(
-    authRegisterPath(),
-    formData,
-    { errorMessage: "Could not create account" },
-  );
-
-  setAccessToken(data.accessToken);
-
-  return data;
 }
 
 /** Current user from JWT (`Authorization: Bearer`). */

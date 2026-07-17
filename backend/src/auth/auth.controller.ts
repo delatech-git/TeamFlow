@@ -43,11 +43,11 @@ export class AuthController {
           maxSize: 2 * 1024 * 1024,
         })
         .build({
-          fileIsRequired: true,
+          fileIsRequired: false,
           errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         }),
     )
-    file: Express.Multer.File,
+    file?: Express.Multer.File,
   ) {
     console.log('REGISTER DTO:', dto);
 

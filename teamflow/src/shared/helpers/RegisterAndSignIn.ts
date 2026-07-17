@@ -1,4 +1,5 @@
 import { proxyPostFormData } from "@/src/infrastructure/api/core/fetch-client";
+import { authRegisterPath } from "@/src/infrastructure/api/auth/paths";
 import { setAccessToken } from "@/src/infrastructure/auth/session";
 
 export async function registerAndSignIn(body: {
@@ -6,7 +7,7 @@ export async function registerAndSignIn(body: {
   email: string;
   fullName: string;
   password: string;
-  avatarFile: File;
+  avatarFile?: File | null;
 }) {
   const formData = new FormData();
 
@@ -14,33 +15,15 @@ export async function registerAndSignIn(body: {
   formData.append("email", body.email);
   formData.append("fullName", body.fullName);
   formData.append("password", body.password);
-  formData.append("avatar", body.avatarFile);
-
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
-    method: "POST",
-    body: formData,
-  });
-
-  const rawText = await res.text();
-
-  console.log("REGISTER STATUS:", res.status);
-  console.log("REGISTER RESPONSE:", rawText);
-
-  let result: any = null;
-
-  try {
-    result = rawText ? JSON.parse(rawText) : null;
-  } catch {
-    result = null;
+  if (body.avatarFile) {
+    formData.append("avatar", body.avatarFile);
   }
 
-  if (!res.ok) {
-    throw new Error(
-      Array.isArray(result?.message)
-        ? result.message.join(", ")
-        : result?.message || rawText || "Registration failed"
-    );
-  }
+  const result = await proxyPostFormData<{ accessToken?: string }>(
+    authRegisterPath(),
+    formData,
+    { errorMessage: "Registration failed" },
+  );
 
   if (result.accessToken) {
     setAccessToken(result.accessToken);

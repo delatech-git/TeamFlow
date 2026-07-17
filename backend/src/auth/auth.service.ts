@@ -55,7 +55,7 @@ export class AuthService {
       },
     };
   }
- async register(dto: RegisterDto, file: Express.Multer.File) {
+ async register(dto: RegisterDto, file?: Express.Multer.File) {
   const existingUser = await this.prisma.user.findFirst({
     where: {
       OR: [{ email: dto.email }, { username: dto.username }],
@@ -71,7 +71,9 @@ export class AuthService {
   > | null = null;
 
   try {
-    uploadedImage = await this.cloudinaryService.uploadAvatar(file);
+    if (file) {
+      uploadedImage = await this.cloudinaryService.uploadAvatar(file);
+    }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
@@ -81,8 +83,8 @@ export class AuthService {
         email: dto.email,
         fullName: dto.fullName,
         passwordHash,
-        avatarUrl: uploadedImage.secure_url,
-        avatarPublicId: uploadedImage.public_id,
+        avatarUrl: uploadedImage?.secure_url ?? null,
+        avatarPublicId: uploadedImage?.public_id ?? null,
       },
     });
 

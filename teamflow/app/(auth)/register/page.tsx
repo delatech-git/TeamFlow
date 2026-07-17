@@ -31,14 +31,7 @@ export default function RegisterPage() {
 async function onSubmit(e: React.FormEvent) {
   e.preventDefault();
   setError("");
-
-  if (!avatarFile) {
-    setError("Please upload an avatar.");
-    return;
-  }
-
   setLoading(true);
-console.log(avatarFile,"avatar File");
   try {
     await registerAndSignIn({
       username: username.trim(),
