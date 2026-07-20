@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Camera, ChevronDown, LayoutGrid, Pencil, Sparkles, X } from "lucide-react";
+import { Camera, ChevronDown, LayoutGrid, Pencil, Share2, Sparkles, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Components } from "react-markdown";
@@ -12,6 +12,7 @@ import {
   type Accent,
 } from "@/app/planned-ideas/colorAccents";
 import { PhotoLightbox } from "@/app/planned-ideas/components/photoLightbox";
+import { LinkedInPostModal } from "@/app/planned-ideas/components/linkedInPostModal";
 
 const GUIDE_COLLAPSED_HEIGHT = 500;
 const PHOTOS_PAGE_SIZE = 10;
@@ -95,6 +96,7 @@ export function IdeaDetailPanel({
   const [guideDraft, setGuideDraft] = useState("");
   const [openPhotoIndex, setOpenPhotoIndex] = useState<number | null>(null);
   const [visiblePhotoCount, setVisiblePhotoCount] = useState(PHOTOS_PAGE_SIZE);
+  const [showLinkedInModal, setShowLinkedInModal] = useState(false);
 
   useEffect(() => {
     const el = guideContentRef.current;
@@ -304,17 +306,27 @@ export function IdeaDetailPanel({
               Team photos
             </h3>
           </div>
-          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-cyan-400/35 bg-cyan-500/15 px-3 py-1.5 text-sm font-semibold text-cyan-100">
-            <Camera size={14} aria-hidden />
-            {uploadingPhoto ? "Uploading..." : "Upload photo"}
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              className="hidden"
-              disabled={uploadingPhoto}
-              onChange={onTeamPhotoUpload}
-            />
-          </label>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowLinkedInModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-600/50 px-3 py-1.5 text-sm font-semibold text-slate-200 transition hover:border-cyan-400/40 hover:text-cyan-200"
+            >
+              <Share2 size={14} aria-hidden />
+              LinkedIn post
+            </button>
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-cyan-400/35 bg-cyan-500/15 px-3 py-1.5 text-sm font-semibold text-cyan-100">
+              <Camera size={14} aria-hidden />
+              {uploadingPhoto ? "Uploading..." : "Upload photo"}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                disabled={uploadingPhoto}
+                onChange={onTeamPhotoUpload}
+              />
+            </label>
+          </div>
         </div>
 
         {photoError ? (
@@ -373,6 +385,14 @@ export function IdeaDetailPanel({
         index={openPhotoIndex}
         onClose={() => setOpenPhotoIndex(null)}
         onNavigate={setOpenPhotoIndex}
+      />
+
+      <LinkedInPostModal
+        open={showLinkedInModal}
+        onClose={() => setShowLinkedInModal(false)}
+        ideaId={selectedIdeaView.id}
+        ideaTitle={selectedIdeaView.title}
+        teamPhotos={teamPhotos}
       />
     </section>
   );

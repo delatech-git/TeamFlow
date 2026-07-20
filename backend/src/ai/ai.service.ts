@@ -231,6 +231,56 @@ Rules:
 
     return savedSummary;
   }
+
+  async generateLinkedInCaption(ideaId: string) {
+    const idea = await this.prisma.idea.findUnique({
+      where: { id: ideaId },
+      include: { plannedGuide: true },
+    });
+
+    if (!idea) {
+      throw new NotFoundException('Idea not found');
+    }
+
+    const completion = await this.openai.chat.completions.create({
+      model: 'gpt-4.1-mini',
+      temperature: 0.7,
+      messages: [
+        {
+          role: 'system',
+          content: `
+You write LinkedIn posts announcing a team event or project. Follow the
+general structure of a good LinkedIn post:
+- A short, attention-grabbing hook as the first line.
+- A few short paragraphs or line breaks (no walls of text), written in a
+  warm, professional, first-person-plural voice ("we", "our team").
+- End with 3-6 relevant hashtags on their own line.
+Plain text only, no Markdown formatting (no #, *, or bullet characters).
+Detect the language of the idea title/description and write the post in
+that same language.
+`,
+        },
+        {
+          role: 'user',
+          content: `
+Idea title: ${idea.title}
+Description: ${idea.shortDescription}
+${idea.plannedGuide?.summary ? `Event guide:\n${idea.plannedGuide.summary}` : ''}
+
+Write a LinkedIn post about this.
+`,
+        },
+      ],
+    });
+
+    const caption = completion.choices[0].message.content?.trim() ?? '';
+
+    if (!caption) {
+      throw new BadRequestException('AI could not generate a LinkedIn post.');
+    }
+
+    return { caption };
+  }
 }
 
 function extractStickerText(content: string): string {
