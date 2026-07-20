@@ -34,8 +34,11 @@ export class IdeasController {
   constructor(private readonly ideasService: IdeasService) {}
 
   @Get()
-  findAll(@Query('status') status?: string) {
-    return this.ideasService.findAll(status);
+  findAll(
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.ideasService.findAll(status, search);
   }
 
   @Get(':id')

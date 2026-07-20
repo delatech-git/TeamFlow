@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import HeroSlider from "../__components/layout/heroSlider";
 import { BackToDashboardLink } from "../__components/layout/backToDashboardLink";
 import { Card } from "../__components/ui/card";
@@ -59,12 +60,14 @@ function mapIdeaToCard(idea: IdeaResponseDto): IdeaCardModel {
 }
 
 export default function DiscoverIdeasPage() {
+  const searchParams = useSearchParams();
   const [ideas, setIdeas] = useState<IdeaCardModel[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [displayCount, setDisplayCount] = useState(9);
   const [canDelete, setCanDelete] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const searchQuery = searchParams.get("q") ?? "";
 
   useEffect(() => {
     if (!getAccessToken()) {
@@ -87,10 +90,11 @@ export default function DiscoverIdeasPage() {
 
   useEffect(() => {
     let cancelled = false;
+    setDisplayCount(9);
 
     (async () => {
       try {
-        const data = await getIdeas();
+        const data = await getIdeas(undefined, searchQuery || undefined);
         if (!cancelled) {
           setIdeas(data.map(mapIdeaToCard));
         }
@@ -108,7 +112,7 @@ export default function DiscoverIdeasPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [searchQuery]);
 
   async function handleDeleteIdea(id: string) {
     if (
@@ -156,7 +160,13 @@ export default function DiscoverIdeasPage() {
             <p className="text-center text-red-400">{loadError}</p>
           )}
 
-          {hydrated && !loadError && ideas.length === 0 && (
+          {hydrated && !loadError && ideas.length === 0 && searchQuery && (
+            <p className="text-center text-lg text-white/60">
+              No ideas match &quot;{searchQuery}&quot;.
+            </p>
+          )}
+
+          {hydrated && !loadError && ideas.length === 0 && !searchQuery && (
             <p className="text-center text-lg text-white/60">
               No ideas yet. Create one after signing in.
             </p>

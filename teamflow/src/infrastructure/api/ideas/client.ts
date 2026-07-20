@@ -25,8 +25,9 @@ export type {
 
 export async function getIdeas(
   status?: string,
+  search?: string,
 ): Promise<IdeaResponseDto[]> {
-  return proxyGetJson<IdeaResponseDto[]>(ideasListPath(status), {
+  return proxyGetJson<IdeaResponseDto[]>(ideasListPath(status, search), {
     errorMessage: "Failed to fetch ideas",
   });
 }
