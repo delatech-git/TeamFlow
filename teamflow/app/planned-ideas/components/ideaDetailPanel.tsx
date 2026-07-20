@@ -40,7 +40,7 @@ function getGuideMarkdownComponents(accent: Accent): Components {
       </li>
     ),
     table: ({ children }) => (
-      <div className={`mt-2 overflow-x-auto rounded-lg border ${accent.border}`}>
+      <div className="mt-2 overflow-x-auto rounded-lg">
         <table className="w-full text-left text-sm text-slate-300">
           {children}
         </table>
