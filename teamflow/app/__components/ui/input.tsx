@@ -1,4 +1,7 @@
-import { forwardRef, type InputHTMLAttributes, type ReactNode } from "react";
+"use client";
+
+import { forwardRef, useState, type InputHTMLAttributes, type ReactNode } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { cn } from "./utils";
 
 export type InputVariant = "default" | "glass" | "authDark";
@@ -69,6 +72,22 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       : "text-xs font-medium text-slate-600";
 
   const isFile = props.type === "file";
+  const isPassword = props.type === "password";
+  const [showPassword, setShowPassword] = useState(false);
+
+  const effectiveTrailingIcon = isPassword ? (
+    <button
+      type="button"
+      tabIndex={-1}
+      onClick={() => setShowPassword((prev) => !prev)}
+      aria-label={showPassword ? "Hide password" : "Show password"}
+      className="pointer-events-auto text-slate-500 hover:text-slate-700"
+    >
+      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+    </button>
+  ) : (
+    trailingIcon
+  );
 
   return (
     <div className={cn("flex flex-col gap-1.5", fullWidth && "w-full")}>
@@ -92,17 +111,18 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             isFile ? fileBaseClasses : baseClasses,
             isFile ? fileVariantClasses[variant] : variantClasses[variant],
             !isFile && leadingIcon ? "pl-9" : undefined,
-            !isFile && trailingIcon ? "pr-9" : undefined,
+            !isFile && effectiveTrailingIcon ? "pr-9" : undefined,
             fullWidth && "w-full",
             error && "border-red-500 focus:ring-red-500/20",
             className,
           )}
           {...props}
+          type={isPassword ? (showPassword ? "text" : "password") : props.type}
         />
 
-        {trailingIcon && (
+        {effectiveTrailingIcon && (
           <span className="absolute inset-y-0 right-3 flex items-center">
-            {trailingIcon}
+            {effectiveTrailingIcon}
           </span>
         )}
       </div>
