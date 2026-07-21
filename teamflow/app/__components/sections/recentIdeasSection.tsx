@@ -6,8 +6,8 @@ export async function RecentIdeasSection() {
   const recentIdeas = await getRecentIdeas();
 
   return (
-    <section className="bg-[#f3f5f9] px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-[1380px]">
+    <section className="bg-[#0e0d17] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto">
         <RecentIdeasClient initialIdeas={recentIdeas} />
       </div>
     </section>
