@@ -28,19 +28,19 @@ type Props = {
 
 const STAT_ICON_STYLES = {
   orange: {
-    icon: "border-orange-400/30 bg-orange-500/15 text-orange-300",
+    icon: "bg-linear-to-br from-orange-400 to-amber-500 text-white shadow-[0_0_18px_rgba(249,115,22,0.55)]",
     glow: "shadow-[0_0_24px_rgba(249,115,22,0.12)]",
   },
   pink: {
-    icon: "border-pink-400/30 bg-pink-500/15 text-pink-300",
+    icon: "bg-linear-to-br from-pink-400 to-rose-500 text-white shadow-[0_0_18px_rgba(236,72,153,0.55)]",
     glow: "shadow-[0_0_24px_rgba(236,72,153,0.12)]",
   },
   teal: {
-    icon: "border-emerald-400/30 bg-emerald-500/15 text-emerald-300",
+    icon: "bg-linear-to-br from-emerald-400 to-teal-500 text-white shadow-[0_0_18px_rgba(16,185,129,0.55)]",
     glow: "shadow-[0_0_24px_rgba(16,185,129,0.12)]",
   },
   purple: {
-    icon: "border-violet-400/30 bg-violet-500/15 text-violet-300",
+    icon: "bg-linear-to-br from-violet-400 to-purple-500 text-white shadow-[0_0_18px_rgba(139,92,246,0.55)]",
     glow: "shadow-[0_0_24px_rgba(139,92,246,0.12)]",
   },
 } as const;
@@ -160,7 +160,7 @@ export function RecentIdeasClient({ initialIdeas }: Props) {
 
             <Link
               href="/discover-ideas"
-              className="group inline-flex h-12 shrink-0 items-center justify-center gap-3 rounded-2xl border border-orange-400/50 bg-linear-to-r from-orange-500/10 to-pink-500/10 px-5 text-sm font-semibold text-white transition duration-300 hover:border-pink-400 hover:from-orange-500/20 hover:to-pink-500/20"
+              className="group inline-flex h-12 shrink-0 items-center justify-center gap-3 rounded-2xl bg-linear-to-r from-orange-500 to-pink-500 px-6 text-sm font-bold text-white shadow-lg shadow-orange-500/30 transition duration-300 hover:scale-105 hover:shadow-xl hover:shadow-pink-500/40"
             >
               See all ideas
               <ArrowRight
@@ -340,7 +340,7 @@ function StatCard({
       className={`flex min-h-22 items-center gap-3 rounded-2xl border border-white/10 bg-white/4.5 px-4 py-3 backdrop-blur-md transition hover:border-white/15 hover:bg-white/6.5 ${styles.glow}`}
     >
       <span
-        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border ${styles.icon}`}
+        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${styles.icon}`}
       >
         {icon}
       </span>
