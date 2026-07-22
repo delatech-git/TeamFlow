@@ -3,6 +3,7 @@ export type CreateIdeaBody = {
   shortDescription: string;
   coverImageFile?: File | null;
   tagIds: string[];
+  status?: "DRAFT" | "NEW";
 };
 
 export type IdeaResponseDto = {

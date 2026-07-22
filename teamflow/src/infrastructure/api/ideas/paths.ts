@@ -43,3 +43,7 @@ export function ideaTeamPhotosPath(id: string): string {
 export function ideaCoverImagePath(id: string): string {
   return buildProxyPath(["ideas", id, "cover-image"]);
 }
+
+export function ideaStatusPath(id: string): string {
+  return buildProxyPath(["ideas", id, "status"]);
+}

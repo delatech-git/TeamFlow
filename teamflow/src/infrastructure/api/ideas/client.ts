@@ -1,6 +1,6 @@
 import { proxyDelete, proxyGetJson, proxyPatchFormData, proxyPatchJson, proxyPostFormData, proxyPostJson, proxyPutJson } from "../core/fetch-client";
 import { getAccessToken } from "../../auth/session";
-import { commentReactionsPath, ideaCommentDetailPath, ideaCommentsPath, ideaCoverImagePath, ideaPlannedGuidePath, ideaRatingsPath, ideaTeamPhotosPath, ideasBoardPath, ideasCreatePath, ideasDetailPath, ideasListPath } from "./paths";
+import { commentReactionsPath, ideaCommentDetailPath, ideaCommentsPath, ideaCoverImagePath, ideaPlannedGuidePath, ideaRatingsPath, ideaStatusPath, ideaTeamPhotosPath, ideasBoardPath, ideasCreatePath, ideasDetailPath, ideasListPath } from "./paths";
 import type {
   CommentReactionDto,
   CreateIdeaBody,
@@ -47,6 +47,10 @@ export async function createIdea(
   formData.append("shortDescription", body.shortDescription);
   formData.append("tagIds", JSON.stringify(body.tagIds ?? []));
 
+  if (body.status) {
+    formData.append("status", body.status);
+  }
+
   if (body.coverImageFile) {
     formData.append("coverImage", body.coverImageFile);
   }
@@ -73,6 +77,25 @@ export async function updateIdeaCoverImage(
     errorMessage: "Could not update the cover image",
     init: { headers: { Authorization: `Bearer ${token}` } },
   });
+}
+
+export async function updateIdeaStatus(
+  id: string,
+  status: string,
+): Promise<IdeaResponseDto> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  return proxyPatchJson<IdeaResponseDto, { status: string }>(
+    ideaStatusPath(id),
+    { status },
+    {
+      errorMessage: "Could not update the idea status",
+      init: { headers: { Authorization: `Bearer ${token}` } },
+    },
+  );
 }
 
 export async function getIdeaById(id: string): Promise<IdeaResponseDto> {

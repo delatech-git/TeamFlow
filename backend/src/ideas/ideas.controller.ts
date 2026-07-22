@@ -22,6 +22,7 @@ import { IdeasService } from './ideas.service';
 import { CreateIdeaMultipartDto } from './dto/createIdeaMultipartDto';
 import { SaveIdeaBoardDto } from './dto/save-idea-board.dto';
 import { UpdatePlannedGuideDto } from './dto/update-planned-guide.dto';
+import { UpdateIdeaStatusDto } from './dto/update-idea-status.dto';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth-guard';
 import { RolesGuard } from '@/auth/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -79,10 +80,17 @@ export class IdeasController {
         title: dto.title,
         shortDescription: dto.shortDescription,
         tagIds: parseTagIds(dto.tagIds),
+        status: dto.status,
       },
       user.id,
       coverImage,
     );
+  }
+
+  @Patch(':id/status')
+  @UseGuards(JwtAuthGuard)
+  updateStatus(@Param('id') id: string, @Body() dto: UpdateIdeaStatusDto) {
+    return this.ideasService.updateStatus(id, dto.status);
   }
 
   @Post(':id/team-photos')
