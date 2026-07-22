@@ -1,6 +1,6 @@
-import { proxyDelete, proxyGetJson, proxyPatchJson, proxyPostFormData, proxyPostJson, proxyPutJson } from "../core/fetch-client";
+import { proxyDelete, proxyGetJson, proxyPatchFormData, proxyPatchJson, proxyPostFormData, proxyPostJson, proxyPutJson } from "../core/fetch-client";
 import { getAccessToken } from "../../auth/session";
-import { commentReactionsPath, ideaCommentDetailPath, ideaCommentsPath, ideaPlannedGuidePath, ideaRatingsPath, ideaTeamPhotosPath, ideasBoardPath, ideasCreatePath, ideasDetailPath, ideasListPath } from "./paths";
+import { commentReactionsPath, ideaCommentDetailPath, ideaCommentsPath, ideaCoverImagePath, ideaPlannedGuidePath, ideaRatingsPath, ideaTeamPhotosPath, ideasBoardPath, ideasCreatePath, ideasDetailPath, ideasListPath } from "./paths";
 import type {
   CommentReactionDto,
   CreateIdeaBody,
@@ -53,6 +53,24 @@ export async function createIdea(
 
   return proxyPostFormData<IdeaResponseDto>(ideasCreatePath(), formData, {
     errorMessage: "Could not create idea",
+    init: { headers: { Authorization: `Bearer ${token}` } },
+  });
+}
+
+export async function updateIdeaCoverImage(
+  id: string,
+  coverImage: File,
+): Promise<IdeaResponseDto> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const formData = new FormData();
+  formData.append("coverImage", coverImage);
+
+  return proxyPatchFormData<IdeaResponseDto>(ideaCoverImagePath(id), formData, {
+    errorMessage: "Could not update the cover image",
     init: { headers: { Authorization: `Bearer ${token}` } },
   });
 }

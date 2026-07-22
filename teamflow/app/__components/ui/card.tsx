@@ -1,8 +1,9 @@
 "use client";
 
+import { useId } from "react";
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, Trash2 } from "lucide-react";
+import { ArrowUpRight, Camera, Loader2, Trash2 } from "lucide-react";
 
 import { cn } from "./utils";
 import { Button } from "./button";
@@ -21,6 +22,9 @@ type CardProps = {
   showDelete?: boolean;
   onDelete?: () => void | Promise<void>;
   deleteBusy?: boolean;
+  showEditImage?: boolean;
+  onUpdateImage?: (file: File) => void | Promise<void>;
+  editImageBusy?: boolean;
 };
 
 function isRemoteImageUrl(src: string): boolean {
@@ -44,7 +48,12 @@ export function Card({
   showDelete,
   onDelete,
   deleteBusy,
+  showEditImage,
+  onUpdateImage,
+  editImageBusy,
 }: CardProps) {
+  const editImageInputId = useId();
+
   return (
     <article
       className={cn(
@@ -67,6 +76,34 @@ export function Card({
         >
           <Trash2 size={18} strokeWidth={2} aria-hidden />
         </button>
+      ) : null}
+
+      {showEditImage ? (
+        <label
+          htmlFor={editImageInputId}
+          title="Update cover image"
+          className="absolute left-4 top-4 z-30 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-black/55 text-white/90 backdrop-blur-sm transition hover:border-orange-400/60 hover:bg-orange-950/60 hover:text-orange-100"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {editImageBusy ? (
+            <Loader2 size={18} className="animate-spin" aria-hidden />
+          ) : (
+            <Camera size={18} strokeWidth={2} aria-hidden />
+          )}
+          <input
+            id={editImageInputId}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="sr-only"
+            disabled={editImageBusy}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file) void onUpdateImage?.(file);
+            }}
+          />
+        </label>
       ) : null}
       {image ? (
         typeof image === "string" && isRemoteImageUrl(image) ? (

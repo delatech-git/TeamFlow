@@ -25,6 +25,7 @@ export class IdeasService {
           title: dto.title,
           shortDescription: dto.shortDescription,
           coverImageUrl: uploadedCover?.secure_url ?? null,
+          coverImagePublicId: uploadedCover?.public_id ?? null,
           status: 'NEW',
           createdById: userId,
           tags: {
@@ -250,6 +251,44 @@ export class IdeasService {
       update: { summary },
       create: { ideaId: id, summary, createdById: idea.createdById },
     });
+  }
+
+  async updateCoverImage(id: string, coverImage: Express.Multer.File) {
+    const idea = await this.prisma.idea.findUnique({
+      where: { id },
+      select: { id: true, coverImagePublicId: true },
+    });
+    if (!idea) {
+      throw new NotFoundException('Idea not found');
+    }
+
+    const uploaded = await this.cloudinaryService.uploadIdeaCover(coverImage);
+
+    try {
+      const updated = await this.prisma.idea.update({
+        where: { id },
+        data: {
+          coverImageUrl: uploaded.secure_url,
+          coverImagePublicId: uploaded.public_id,
+        },
+        include: {
+          createdBy: true,
+          tags: true,
+          board: true,
+        },
+      });
+
+      if (idea.coverImagePublicId) {
+        await this.cloudinaryService
+          .deleteImage(idea.coverImagePublicId)
+          .catch(() => undefined);
+      }
+
+      return updated;
+    } catch (error) {
+      await this.cloudinaryService.deleteImage(uploaded.public_id);
+      throw error;
+    }
   }
 
   async remove(id: string) {

@@ -39,3 +39,7 @@ export function commentReactionsPath(commentId: string): string {
 export function ideaTeamPhotosPath(id: string): string {
   return buildProxyPath(["ideas", id, "team-photos"]);
 }
+
+export function ideaCoverImagePath(id: string): string {
+  return buildProxyPath(["ideas", id, "cover-image"]);
+}

@@ -13,6 +13,7 @@ import fallbackImage from "@/assets/cardImage.png";
 import {
   deleteIdea,
   getIdeas,
+  updateIdeaCoverImage,
   type IdeaResponseDto,
 } from "@/src/infrastructure/api/ideas/client";
 import { fetchCurrentUser } from "@/src/infrastructure/api/auth/client";
@@ -67,6 +68,7 @@ export default function DiscoverIdeasPage() {
   const [displayCount, setDisplayCount] = useState(9);
   const [canDelete, setCanDelete] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [updatingImageId, setUpdatingImageId] = useState<string | null>(null);
   const searchQuery = searchParams.get("q") ?? "";
 
   useEffect(() => {
@@ -132,6 +134,24 @@ export default function DiscoverIdeasPage() {
       );
     } finally {
       setDeletingId(null);
+    }
+  }
+
+  async function handleUpdateCoverImage(id: string, file: File) {
+    setUpdatingImageId(id);
+    try {
+      const updated = await updateIdeaCoverImage(id, file);
+      setIdeas((prev) =>
+        prev.map((i) =>
+          i.id === id ? { ...i, image: updated.coverImageUrl || fallbackImage } : i,
+        ),
+      );
+    } catch (e) {
+      window.alert(
+        e instanceof Error ? e.message : "Could not update the cover image.",
+      );
+    } finally {
+      setUpdatingImageId(null);
     }
   }
 
@@ -203,6 +223,9 @@ export default function DiscoverIdeasPage() {
                       showDelete={canDelete}
                       deleteBusy={deletingId === idea.id}
                       onDelete={() => handleDeleteIdea(idea.id)}
+                      showEditImage={canDelete}
+                      editImageBusy={updatingImageId === idea.id}
+                      onUpdateImage={(file) => handleUpdateCoverImage(idea.id, file)}
                     />
                   ))}
                 </div>

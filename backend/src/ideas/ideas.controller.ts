@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -112,6 +113,35 @@ export class IdeasController {
     photo: Express.Multer.File,
   ) {
     return this.ideasService.addTeamPhoto(id, user.id, photo);
+  }
+
+  @Patch(':id/cover-image')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('coverImage', {
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
+  updateCoverImage(
+    @Param('id') id: string,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: /(jpg|jpeg|png|webp)$/i,
+        })
+        .addMaxSizeValidator({
+          maxSize: 5 * 1024 * 1024,
+        })
+        .build({
+          fileIsRequired: true,
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        }),
+    )
+    coverImage: Express.Multer.File,
+  ) {
+    return this.ideasService.updateCoverImage(id, coverImage);
   }
 
   @Put(':id/board')
