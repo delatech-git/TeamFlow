@@ -273,7 +273,7 @@ function IdeaCard({
             <input
               id={inputId}
               type="file"
-              accept="image/png,image/jpeg,image/webp"
+              accept="image/png,image/jpeg,image/webp,image/avif,image/gif"
               className="sr-only"
               disabled={isUploading}
               onClick={(e) => e.stopPropagation()}

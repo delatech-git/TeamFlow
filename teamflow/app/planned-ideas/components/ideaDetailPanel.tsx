@@ -320,7 +320,7 @@ export function IdeaDetailPanel({
               {uploadingPhoto ? "Uploading..." : "Upload photo"}
               <input
                 type="file"
-                accept="image/png,image/jpeg,image/webp"
+                accept="image/png,image/jpeg,image/webp,image/avif,image/gif"
                 className="hidden"
                 disabled={uploadingPhoto}
                 onChange={onTeamPhotoUpload}

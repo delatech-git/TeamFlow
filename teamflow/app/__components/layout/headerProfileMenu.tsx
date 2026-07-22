@@ -217,7 +217,7 @@ export function HeaderProfileMenu() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept="image/png,image/jpeg,image/webp,image/avif,image/gif"
             className="hidden"
             onChange={onAvatarChange}
           />

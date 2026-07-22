@@ -138,7 +138,7 @@ async function onSubmit(e: React.FormEvent) {
           name="avatar"
           label="Profile image"
           type="file"
-          accept="image/png,image/jpeg,image/webp"
+          accept="image/png,image/jpeg,image/webp,image/avif,image/gif"
           variant="authDark"
           onChange={(e) => {
             const file = e.target.files?.[0] ?? null;

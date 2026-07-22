@@ -93,7 +93,7 @@ export function Card({
           <input
             id={editImageInputId}
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept="image/png,image/jpeg,image/webp,image/avif,image/gif"
             className="sr-only"
             disabled={editImageBusy}
             onClick={(e) => e.stopPropagation()}
