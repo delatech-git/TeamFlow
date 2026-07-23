@@ -6,16 +6,10 @@ import type { IdeaResponseDto } from "./types";
 
 export type { IdeaResponseDto };
 
-export async function getIdeas(
-  status?: string,
-): Promise<IdeaResponseDto[]> {
-  return proxyGetJson<IdeaResponseDto[]>(ideasListPath(status), {
+export async function getRecentIdeas(): Promise<IdeaResponseDto[]> {
+  return proxyGetJson<IdeaResponseDto[]>(ideasListPath(undefined, undefined, 3), {
     errorMessage: "Failed to fetch ideas",
   });
-}
-
-export async function getRecentIdeas(): Promise<IdeaResponseDto[]> {
-  return getIdeas();
 }
 
 export async function getIdeaById(

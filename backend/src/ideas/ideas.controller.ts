@@ -39,8 +39,9 @@ export class IdeasController {
   findAll(
     @Query('status') status?: string,
     @Query('search') search?: string,
+    @Query('limit') limit?: string,
   ) {
-    return this.ideasService.findAll(status, search);
+    return this.ideasService.findAll(status, search, limit ? Number(limit) : undefined);
   }
 
   @Get(':id')

@@ -1,7 +1,7 @@
 import { buildProxyPath } from "../core/proxy-path";
 
-export function ideasListPath(status?: string, search?: string): string {
-  return buildProxyPath(["ideas"], { status, search });
+export function ideasListPath(status?: string, search?: string, limit?: number): string {
+  return buildProxyPath(["ideas"], { status, search, limit });
 }
 
 export function ideasCreatePath(): string {

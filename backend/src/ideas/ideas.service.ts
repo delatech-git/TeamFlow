@@ -118,10 +118,11 @@ export class IdeasService {
     }
   }
 
-  async findAll(status?: string, search?: string) {
+  async findAll(status?: string, search?: string, limit?: number) {
     const trimmedSearch = search?.trim();
 
     return this.prisma.idea.findMany({
+      take: limit,
       where: {
         status: status ? (status as any) : undefined,
         ...(trimmedSearch
