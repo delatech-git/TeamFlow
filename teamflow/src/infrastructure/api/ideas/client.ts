@@ -1,22 +1,33 @@
-import { proxyDelete, proxyGetJson, proxyPostJson, proxyPutJson } from "../core/fetch-client";
+import { proxyDelete, proxyGetJson, proxyPatchFormData, proxyPatchJson, proxyPostFormData, proxyPostJson, proxyPutJson } from "../core/fetch-client";
 import { getAccessToken } from "../../auth/session";
-import { ideaCommentsPath, ideasBoardPath, ideasCreatePath, ideasDetailPath, ideasListPath } from "./paths";
+import { commentReactionsPath, ideaCommentDetailPath, ideaCommentsPath, ideaCoverImagePath, ideaPlannedGuidePath, ideaRatingsPath, ideaStatusPath, ideaTeamPhotosPath, ideasBoardPath, ideasCreatePath, ideasDetailPath, ideasListPath } from "./paths";
 import type {
+  CommentReactionDto,
   CreateIdeaBody,
   CreateIdeaCommentBody,
   IdeaCommentDto,
   IdeaResponseDto,
+  PlannedGuideDto,
+  RatingsSummaryDto,
   SaveIdeaBoardBody,
+  TeamPhotoDto,
 } from "./types";
 
-export type { CreateIdeaBody, IdeaCommentDto, IdeaResponseDto };
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+export type {
+  CommentReactionDto,
+  CreateIdeaBody,
+  IdeaCommentDto,
+  IdeaResponseDto,
+  PlannedGuideDto,
+  RatingsSummaryDto,
+  TeamPhotoDto,
+};
 
 export async function getIdeas(
   status?: string,
+  search?: string,
 ): Promise<IdeaResponseDto[]> {
-  return proxyGetJson<IdeaResponseDto[]>(ideasListPath(status), {
+  return proxyGetJson<IdeaResponseDto[]>(ideasListPath(status, search), {
     errorMessage: "Failed to fetch ideas",
   });
 }
@@ -36,44 +47,55 @@ export async function createIdea(
   formData.append("shortDescription", body.shortDescription);
   formData.append("tagIds", JSON.stringify(body.tagIds ?? []));
 
+  if (body.status) {
+    formData.append("status", body.status);
+  }
+
   if (body.coverImageFile) {
     formData.append("coverImage", body.coverImageFile);
   }
 
-  const response = await fetch(`${API_URL}/ideas`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
+  return proxyPostFormData<IdeaResponseDto>(ideasCreatePath(), formData, {
+    errorMessage: "Could not create idea",
+    init: { headers: { Authorization: `Bearer ${token}` } },
   });
+}
 
-  const rawText = await response.text();
-
-  let result: unknown = null;
-
-  try {
-    result = rawText ? JSON.parse(rawText) : null;
-  } catch {
-    result = null;
+export async function updateIdeaCoverImage(
+  id: string,
+  coverImage: File,
+): Promise<IdeaResponseDto> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("Not authenticated");
   }
 
-  if (!response.ok) {
-    const message =
-      typeof result === "object" &&
-      result !== null &&
-      "message" in result
-        ? (result as { message?: string | string[] }).message
-        : null;
+  const formData = new FormData();
+  formData.append("coverImage", coverImage);
 
-    throw new Error(
-      Array.isArray(message)
-        ? message.join(", ")
-        : message || rawText || "Could not create idea",
-    );
+  return proxyPatchFormData<IdeaResponseDto>(ideaCoverImagePath(id), formData, {
+    errorMessage: "Could not update the cover image",
+    init: { headers: { Authorization: `Bearer ${token}` } },
+  });
+}
+
+export async function updateIdeaStatus(
+  id: string,
+  status: string,
+): Promise<IdeaResponseDto> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("Not authenticated");
   }
 
-  return result as IdeaResponseDto;
+  return proxyPatchJson<IdeaResponseDto, { status: string }>(
+    ideaStatusPath(id),
+    { status },
+    {
+      errorMessage: "Could not update the idea status",
+      init: { headers: { Authorization: `Bearer ${token}` } },
+    },
+  );
 }
 
 export async function getIdeaById(id: string): Promise<IdeaResponseDto> {
@@ -111,9 +133,69 @@ export async function saveIdeaBoard(
   );
 }
 
+export async function updatePlannedGuide(
+  id: string,
+  summary: string,
+): Promise<PlannedGuideDto> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+  return proxyPutJson<PlannedGuideDto, { summary: string }>(
+    ideaPlannedGuidePath(id),
+    { summary },
+    {
+      errorMessage: "Could not save the planned guide",
+      init: { headers: { Authorization: `Bearer ${token}` } },
+    },
+  );
+}
+
+export async function getIdeaRatings(id: string): Promise<RatingsSummaryDto> {
+  return proxyGetJson<RatingsSummaryDto>(ideaRatingsPath(id), {
+    errorMessage: "Failed to fetch ratings",
+  });
+}
+
+export async function rateIdea(
+  id: string,
+  value: number,
+): Promise<RatingsSummaryDto["ratings"][number]> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+  return proxyPutJson<RatingsSummaryDto["ratings"][number], { value: number }>(
+    ideaRatingsPath(id),
+    { value },
+    {
+      errorMessage: "Could not save your rating",
+      init: { headers: { Authorization: `Bearer ${token}` } },
+    },
+  );
+}
+
 export async function getIdeaComments(id: string): Promise<IdeaCommentDto[]> {
   return proxyGetJson<IdeaCommentDto[]>(ideaCommentsPath(id), {
     errorMessage: "Failed to fetch comments",
+  });
+}
+
+export async function addTeamPhoto(
+  id: string,
+  photo: File,
+): Promise<TeamPhotoDto> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const formData = new FormData();
+  formData.append("photo", photo);
+
+  return proxyPostFormData<TeamPhotoDto>(ideaTeamPhotosPath(id), formData, {
+    errorMessage: "Could not upload team photo",
+    init: { headers: { Authorization: `Bearer ${token}` } },
   });
 }
 
@@ -133,4 +215,55 @@ export async function createIdeaComment(
       init: { headers: { Authorization: `Bearer ${token}` } },
     },
   );
+}
+
+export async function toggleCommentReaction(
+  commentId: string,
+  emoji: string,
+): Promise<CommentReactionDto | null> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+  return proxyPostJson<CommentReactionDto | null, { emoji: string }>(
+    commentReactionsPath(commentId),
+    { emoji },
+    {
+      errorMessage: "Could not react to comment",
+      init: { headers: { Authorization: `Bearer ${token}` } },
+    },
+  );
+}
+
+export async function updateIdeaComment(
+  ideaId: string,
+  commentId: string,
+  content: string,
+): Promise<IdeaCommentDto> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+  return proxyPatchJson<IdeaCommentDto, { content: string }>(
+    ideaCommentDetailPath(ideaId, commentId),
+    { content },
+    {
+      errorMessage: "Could not update comment",
+      init: { headers: { Authorization: `Bearer ${token}` } },
+    },
+  );
+}
+
+export async function deleteIdeaComment(
+  ideaId: string,
+  commentId: string,
+): Promise<void> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+  return proxyDelete(ideaCommentDetailPath(ideaId, commentId), {
+    errorMessage: "Could not delete comment",
+    init: { headers: { Authorization: `Bearer ${token}` } },
+  });
 }

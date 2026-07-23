@@ -6,9 +6,9 @@ import { CloudinaryService } from '@/cloudinary/cloudinary.service';
 @Injectable()
 export class IdeasService {
   constructor(
-   private readonly prisma: PrismaService,
+    private readonly prisma: PrismaService,
     private readonly cloudinaryService: CloudinaryService,
-) {}
+  ) {}
 
   async create(
     dto: CreateIdeaDto,
@@ -25,7 +25,8 @@ export class IdeasService {
           title: dto.title,
           shortDescription: dto.shortDescription,
           coverImageUrl: uploadedCover?.secure_url ?? null,
-          status: 'NEW',
+          coverImagePublicId: uploadedCover?.public_id ?? null,
+          status: dto.status ?? 'NEW',
           createdById: userId,
           tags: {
             connect: dto.tagIds.map((id) => ({ id })),
@@ -57,6 +58,8 @@ export class IdeasService {
         createdBy: true,
         tags: true,
 
+        plannedGuide: true,
+
         board: {
           include: {
             stickers: {
@@ -74,23 +77,67 @@ export class IdeasService {
           },
         },
 
-        photos: {
-          include: { uploadedBy: true },
-          orderBy: { createdAt: 'desc' },
+        teamPhotos: {
+          include: {
+            uploadedBy: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
         },
-
-        summary: true,
       },
     });
   }
 
-  async findAll(status?: string) {
+  async addTeamPhoto(ideaId: string, userId: string, photo: Express.Multer.File) {
+    const idea = await this.prisma.idea.findUnique({
+      where: { id: ideaId },
+      select: { id: true },
+    });
+    if (!idea) {
+      throw new NotFoundException('Idea not found');
+    }
+
+    const uploaded = await this.cloudinaryService.uploadTeamPhoto(photo);
+
+    try {
+      return await this.prisma.teamPhoto.create({
+        data: {
+          imageUrl: uploaded.secure_url,
+          imagePublicId: uploaded.public_id,
+          ideaId,
+          uploadedById: userId,
+        },
+        include: {
+          uploadedBy: true,
+        },
+      });
+    } catch (error) {
+      await this.cloudinaryService.deleteImage(uploaded.public_id);
+      throw error;
+    }
+  }
+
+  async findAll(status?: string, search?: string) {
+    const trimmedSearch = search?.trim();
+
     return this.prisma.idea.findMany({
-      where: status
-        ? {
-            status: status as any,
-          }
-        : undefined,
+      where: {
+        status: status ? (status as any) : undefined,
+        ...(trimmedSearch
+          ? {
+              OR: [
+                { title: { contains: trimmedSearch, mode: 'insensitive' } },
+                {
+                  shortDescription: {
+                    contains: trimmedSearch,
+                    mode: 'insensitive',
+                  },
+                },
+              ],
+            }
+          : {}),
+      },
 
       include: {
         createdBy: {
@@ -102,6 +149,10 @@ export class IdeasService {
         },
 
         tags: true,
+        plannedGuide: true,
+        ratings: {
+          select: { value: true },
+        },
       },
 
       orderBy: {
@@ -186,48 +237,78 @@ export class IdeasService {
     return { success: true };
   }
 
-  async addPhoto(ideaId: string, file: Express.Multer.File, userId: string) {
+  async updatePlannedGuide(id: string, summary: string) {
     const idea = await this.prisma.idea.findUnique({
-      where: { id: ideaId },
+      where: { id },
+      select: { id: true, createdById: true },
+    });
+    if (!idea) {
+      throw new NotFoundException('Idea not found');
+    }
+
+    return this.prisma.planSummary.upsert({
+      where: { ideaId: id },
+      update: { summary },
+      create: { ideaId: id, summary, createdById: idea.createdById },
+    });
+  }
+
+  async updateCoverImage(id: string, coverImage: Express.Multer.File) {
+    const idea = await this.prisma.idea.findUnique({
+      where: { id },
+      select: { id: true, coverImagePublicId: true },
+    });
+    if (!idea) {
+      throw new NotFoundException('Idea not found');
+    }
+
+    const uploaded = await this.cloudinaryService.uploadIdeaCover(coverImage);
+
+    try {
+      const updated = await this.prisma.idea.update({
+        where: { id },
+        data: {
+          coverImageUrl: uploaded.secure_url,
+          coverImagePublicId: uploaded.public_id,
+        },
+        include: {
+          createdBy: true,
+          tags: true,
+          board: true,
+        },
+      });
+
+      if (idea.coverImagePublicId) {
+        await this.cloudinaryService
+          .deleteImage(idea.coverImagePublicId)
+          .catch(() => undefined);
+      }
+
+      return updated;
+    } catch (error) {
+      await this.cloudinaryService.deleteImage(uploaded.public_id);
+      throw error;
+    }
+  }
+
+  async updateStatus(id: string, status: string) {
+    const idea = await this.prisma.idea.findUnique({
+      where: { id },
       select: { id: true },
     });
     if (!idea) {
       throw new NotFoundException('Idea not found');
     }
 
-    const uploaded = await this.cloudinaryService.uploadIdeaMoment(file);
-
-    return this.prisma.ideaPhoto.create({
-      data: {
-        ideaId,
-        uploadedById: userId,
-        url: uploaded.secure_url,
-        publicId: uploaded.public_id,
-      },
+    return this.prisma.idea.update({
+      where: { id },
+      data: { status: status as any },
       include: {
-        uploadedBy: true,
+        createdBy: true,
+        tags: true,
+        board: true,
       },
     });
-  }
-
-  async findPhotos(ideaId: string) {
-    return this.prisma.ideaPhoto.findMany({
-      where: { ideaId },
-      include: { uploadedBy: true },
-      orderBy: { createdAt: 'desc' },
-    });
-  }
-
-  async removePhoto(ideaId: string, photoId: string) {
-    const photo = await this.prisma.ideaPhoto.findFirst({
-      where: { id: photoId, ideaId },
-    });
-    if (!photo) {
-      throw new NotFoundException('Photo not found');
-    }
-
-    await this.prisma.ideaPhoto.delete({ where: { id: photoId } });
-    await this.cloudinaryService.deleteImage(photo.publicId);
   }
 
   async remove(id: string) {

@@ -17,6 +17,7 @@ type StickyNoteCardProps = {
   onSaveEditing: () => void;
   onStartResize: (handle: ResizeHandle, event: MouseEvent<HTMLButtonElement>) => void;
   onStartRotate: (event: MouseEvent<HTMLButtonElement>) => void;
+  onDuplicate: () => void;
 };
 
 export default function StickyNoteCard({
@@ -33,6 +34,7 @@ export default function StickyNoteCard({
   onSaveEditing,
   onStartResize,
   onStartRotate,
+  onDuplicate,
 }: StickyNoteCardProps) {
   const noteRotation = note.rotation ?? 0;
 
@@ -88,6 +90,7 @@ export default function StickyNoteCard({
           resizeLabelPrefix="sticky note"
           onStartResize={onStartResize}
           onStartRotate={onStartRotate}
+          onDuplicate={onDuplicate}
         />
       ) : null}
     </article>

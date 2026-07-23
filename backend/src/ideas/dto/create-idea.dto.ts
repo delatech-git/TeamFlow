@@ -1,4 +1,4 @@
-import { IsArray, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateIdeaDto {
   @IsString()
@@ -14,4 +14,8 @@ export class CreateIdeaDto {
 
   @IsArray()
   tagIds!: string[];
+
+  @IsOptional()
+  @IsIn(['DRAFT', 'NEW'])
+  status?: 'DRAFT' | 'NEW';
 }

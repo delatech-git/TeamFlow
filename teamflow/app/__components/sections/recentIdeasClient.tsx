@@ -3,126 +3,246 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
-import { ArrowRight, CalendarDays, Lightbulb, MessageCircle, Star, Users } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  Lightbulb,
+  Sparkles,
+  Star,
+  Users,
+  Zap,
+} from "lucide-react";
 
-import fallbackImage from "@/assets/cardImage.png";
-import { deleteIdea } from "@/src/infrastructure/api/ideas/client";
+import girlImage from "@/assets/girl-sitting.png";
+import { IdeaCard } from "./ideaCard";
 import type { IdeaResponseDto } from "@/src/infrastructure/api/ideas/types";
-import { fetchCurrentUser } from "@/src/infrastructure/api/auth/client";
 import { getAccessToken } from "@/src/infrastructure/auth/session";
 
 type Props = {
   initialIdeas: IdeaResponseDto[];
 };
 
-export function RecentIdeasClient({ initialIdeas }: Props) {
+const STAT_ICON_STYLES = {
+  orange: {
+    icon: "bg-linear-to-br from-orange-400 to-amber-500 text-white shadow-[0_0_18px_rgba(249,115,22,0.55)]",
+    glow: "shadow-[0_0_24px_rgba(249,115,22,0.12)]",
+  },
+  pink: {
+    icon: "bg-linear-to-br from-pink-400 to-rose-500 text-white shadow-[0_0_18px_rgba(236,72,153,0.55)]",
+    glow: "shadow-[0_0_24px_rgba(236,72,153,0.12)]",
+  },
+  teal: {
+    icon: "bg-linear-to-br from-emerald-400 to-teal-500 text-white shadow-[0_0_18px_rgba(16,185,129,0.55)]",
+    glow: "shadow-[0_0_24px_rgba(16,185,129,0.12)]",
+  },
+  purple: {
+    icon: "bg-linear-to-br from-violet-400 to-purple-500 text-white shadow-[0_0_18px_rgba(139,92,246,0.55)]",
+    glow: "shadow-[0_0_24px_rgba(139,92,246,0.12)]",
+  },
+} as const;
 
-  const topIdeas = initialIdeas.slice(0, 3);
-  const ideasCount = initialIdeas.length;
-  const collaborators = new Set(initialIdeas.map((idea) => idea.createdBy.id)).size;
-  const plannedCount = initialIdeas.filter((idea) => idea.status === "PLANNED").length;
-  const teamRating = initialIdeas.length > 0 ? "4.8" : "0.0";
+export function RecentIdeasClient({ initialIdeas }: Props) {
+  const [ideas, setIdeas] = useState(initialIdeas);
+  const [canEdit, setCanEdit] = useState(false);
+
+  useEffect(() => {
+    setCanEdit(Boolean(getAccessToken()));
+  }, []);
+
+  function handleCoverImageUpdated(ideaId: string, coverImageUrl: string | null) {
+    setIdeas((prev) =>
+      prev.map((idea) => (idea.id === ideaId ? { ...idea, coverImageUrl } : idea)),
+    );
+  }
+
+  const topIdeas = ideas.slice(0, 3);
+
+  const ideasCount = ideas.length;
+
+  const collaborators = new Set(
+    ideas
+      .map((idea) => idea.createdBy?.id)
+      .filter(Boolean),
+  ).size;
+
+  const plannedCount = ideas.filter(
+    (idea) => idea.status === "PLANNED",
+  ).length;
+
+  const allRatings = ideas.flatMap((idea) => idea.ratings ?? []);
+
+  const teamRating =
+    allRatings.length > 0
+      ? (
+          allRatings.reduce((sum, rating) => sum + rating.value, 0) /
+          allRatings.length
+        ).toFixed(1)
+      : "—";
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)] sm:p-6">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard icon={<Lightbulb size={16} />} label="Ideas Created" value={String(ideasCount)} delta="+12 this week" />
-          <StatCard icon={<Users size={16} />} label="Active Collaborators" value={String(collaborators)} delta="+5 this week" />
-          <StatCard icon={<CalendarDays size={16} />} label="Planned Events" value={String(plannedCount)} delta="+3 this week" />
-          <StatCard icon={<Star size={16} />} label="Team Rating" value={teamRating} delta="+0.3 this week" />
-        </div>
+    <section className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[#0b1020] shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-20 top-20 h-80 w-80 rounded-full bg-pink-500/10 blur-[120px]" />
+        <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-blue-500/10 blur-[140px]" />
+        <div className="absolute bottom-0 left-1/2 h-72 w-72 rounded-full bg-orange-500/5 blur-[120px]" />
+      </div>
 
-        <div className="mt-6">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900">Top Recent Ideas</h2>
-            <Link href="/discover-ideas" className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-700">
+      <div className="relative grid min-h-162.5 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[370px_minmax(0,1fr)]">
+        <aside className="relative flex min-h-110 flex-col overflow-hidden border-b border-white/10 bg-linear-to-b from-white/[0.035] to-transparent p-6 sm:p-8 lg:min-h-full lg:border-b-0 lg:border-r lg:p-10">
+          <div className="relative z-20">
+            <span className="inline-flex items-center gap-2 rounded-full border border-orange-400/25 bg-orange-400/10 px-3 py-1.5 text-xs font-semibold text-orange-200">
+              <Zap size={13} />
+              Collaborate. Plan. Make it happen.
+            </span>
+
+            <h2 className="mt-6 max-w-xs text-3xl font-extrabold tracking-[-0.04em] text-white sm:text-4xl">
+              Top Recent Ideas
+            </h2>
+
+            <p className="mt-4 max-w-xs text-sm leading-6 text-white/55">
+              Discover the latest ideas from your team and start building
+              unforgettable experiences together.
+            </p>
+          </div>
+
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 h-[68%]">
+            <div className="absolute bottom-10 left-8 h-48 w-48 rounded-full border border-pink-500/20 shadow-[0_0_80px_rgba(236,72,153,0.28)]" />
+
+            <div className="absolute bottom-16 left-10 h-56 w-56 rounded-full border border-orange-400/20 opacity-70" />
+
+            <Image
+              src={girlImage}
+              alt=""
+              priority
+              className="absolute bottom-0 left-1/2 h-auto w-75 max-w-none -translate-x-1/2 object-contain sm:w-85 lg:w-90"
+            />
+          </div>
+
+          <div className="pointer-events-none absolute bottom-20 left-14 z-0 h-28 w-28 rotate-12 rounded-3xl border border-white/5 bg-white/1.5" />
+          <div className="pointer-events-none absolute bottom-40 right-8 z-0 h-20 w-20 -rotate-12 rounded-2xl border border-white/5 bg-white/1.5" />
+        </aside>
+
+        <div className="relative p-5 sm:p-7 lg:p-8 xl:p-10">
+          <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+            <div className="grid flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard
+                icon={<Lightbulb size={18} />}
+                color="orange"
+                label="Ideas Created"
+                value={String(ideasCount)}
+              />
+
+              <StatCard
+                icon={<Users size={18} />}
+                color="pink"
+                label="Active Collaborators"
+                value={String(collaborators)}
+              />
+
+              <StatCard
+                icon={<CalendarDays size={18} />}
+                color="teal"
+                label="Planned Events"
+                value={String(plannedCount)}
+              />
+
+              <StatCard
+                icon={<Star size={18} />}
+                color="purple"
+                label="Team Rating"
+                value={teamRating}
+              />
+            </div>
+
+            <Link
+              href="/discover-ideas"
+              className="group inline-flex h-12 shrink-0 items-center justify-center gap-3 rounded-2xl bg-linear-to-r from-orange-500 to-pink-500 px-6 text-sm font-bold text-white shadow-lg shadow-orange-500/30 transition duration-300 hover:scale-105 hover:shadow-xl hover:shadow-pink-500/40"
+            >
               See all ideas
-              <ArrowRight size={15} aria-hidden />
+              <ArrowRight
+                size={16}
+                aria-hidden
+                className="transition-transform duration-300 group-hover:translate-x-1"
+              />
             </Link>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {topIdeas.map((idea) => {
-              const ideaImage = idea.coverImageUrl || fallbackImage;
-              const owner = idea.createdBy.fullName || idea.createdBy.username;
-              return (
-                <article key={idea.id} className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-950">
-                  <div className="relative h-56">
-                    {typeof ideaImage === "string" && isRemoteImageUrl(ideaImage) ? (
-                      <img
-                        src={ideaImage}
-                        alt={idea.title}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                    ) : (
-                      <Image
-                        src={ideaImage}
-                        alt={idea.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 33vw"
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-linear-to-b from-black/15 via-black/25 to-black/85" />
-                    <div className="absolute bottom-0 left-0 right-0 p-3">
-                      <p className="line-clamp-2 text-lg font-extrabold uppercase leading-tight text-white">{idea.title}</p>
-                    </div>
-                  </div>
-                  <div className="absolute right-2.5 top-2.5 flex gap-1.5">
-                    <span className="rounded-full border border-white/35 bg-black/50 px-2 py-0.5 text-[10px] font-semibold text-white/90">
-                      {idea.status}
-                    </span>
-                  </div>
-                  <div className="absolute bottom-2.5 right-2.5">
-                  </div>
-                  <Link href={`/dashboard/ideas/${idea.id}`} className="absolute inset-0" aria-label={`Open ${idea.title}`} />
-                </article>
-              );
-            })}
+
+          <div className="mt-7">
+            {topIdeas.length > 0 ? (
+              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {topIdeas.map((idea, index) => (
+                  <IdeaCard
+                    key={idea.id}
+                    idea={idea}
+                    priority={index === 0}
+                    canEditImage={canEdit}
+                    onCoverImageUpdated={handleCoverImageUpdated}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyIdeasState />
+            )}
           </div>
         </div>
       </div>
+    </section>
   );
-}
-
-function isRemoteImageUrl(src: string): boolean {
-  return /^https?:\/\//i.test(src);
 }
 
 function StatCard({
   icon,
   label,
   value,
-  delta,
+  color,
 }: {
   icon: ReactNode;
   label: string;
   value: string;
-  delta: string;
+  color: keyof typeof STAT_ICON_STYLES;
 }) {
-  return (
-    <article className="rounded-2xl border border-slate-200 bg-[#fafbff] px-4 py-3">
-      <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">{icon}</div>
-      <p className="text-3xl font-bold leading-none text-slate-900">{value}</p>
-      <p className="mt-2 text-sm text-slate-500">{label}</p>
-      <p className="mt-2 text-sm font-semibold text-emerald-600">{delta}</p>
-    </article>
-  ); 
-}
+  const styles = STAT_ICON_STYLES[color];
 
-function AvatarDot({ label }: { label: string }) {
   return (
-    <span className="grid h-5 w-5 place-items-center rounded-full border border-white/60 bg-white/90 text-[10px] font-bold text-slate-800">
-      {label.slice(0, 1).toUpperCase()}
-    </span>
+    <div
+      className={`flex min-h-22 items-center gap-3 rounded-2xl border border-white/10 bg-white/4.5 px-4 py-3 backdrop-blur-md transition hover:border-white/15 hover:bg-white/6.5 ${styles.glow}`}
+    >
+      <span
+        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${styles.icon}`}
+      >
+        {icon}
+      </span>
+
+      <div className="min-w-0">
+        <p className="text-xl font-bold leading-none text-white">{value}</p>
+        <p className="mt-1.5 truncate text-[11px] leading-4 text-white/50">
+          {label}
+        </p>
+      </div>
+    </div>
   );
 }
 
-function formatRelativeTime(timestamp: string): string {
-  const delta = Date.now() - new Date(timestamp).getTime();
-  if (!Number.isFinite(delta) || delta < 0) return "just now";
-  const hours = Math.floor(delta / (1000 * 60 * 60));
-  if (hours < 1) return "moments ago";
-  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-  const days = Math.floor(hours / 24);
-  return `${days} day${days === 1 ? "" : "s"} ago`;
+function EmptyIdeasState() {
+  return (
+    <div className="flex min-h-97.5 flex-col items-center justify-center rounded-[22px] border border-dashed border-white/15 bg-white/2.5 px-6 text-center">
+      <span className="flex h-14 w-14 items-center justify-center rounded-full border border-orange-400/20 bg-orange-400/10 text-orange-300">
+        <Sparkles size={22} />
+      </span>
+
+      <h3 className="mt-4 text-lg font-bold text-white">No ideas available</h3>
+
+      <p className="mt-2 max-w-sm text-sm leading-6 text-white/50">
+        Once your team creates new ideas, they will appear here.
+      </p>
+
+      <Link
+        href="/discover-ideas"
+        className="mt-5 inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:border-orange-400/50 hover:text-orange-300"
+      >
+        Explore ideas
+        <ArrowRight size={15} />
+      </Link>
+    </div>
+  );
 }

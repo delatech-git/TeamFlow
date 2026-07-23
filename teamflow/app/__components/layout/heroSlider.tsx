@@ -45,7 +45,7 @@ export default function HeroSlider({
 
   const heightClasses: Record<HeroHeight, string> = {
     small: "min-h-[30vh]",
-    medium: "min-h-[50vh]",
+    medium: "min-h-[80vh]",
     large: "min-h-[75vh]",
     full: "min-h-screen",
   };
@@ -84,17 +84,17 @@ export default function HeroSlider({
       >
         <div className="max-w-4xl">
           {slides[activeSlide]?.eyebrow && (
-            <div className="mx-auto mb-7 inline-flex bg-orange-500 px-5 py-2 text-sm font-bold uppercase tracking-wide">
+            <div className="mx-auto mb-7 inline-flex bg-orange-500 px-5 py-2 text-xs 2xl:text-sm font-bold uppercase tracking-wide">
               {slides[activeSlide].eyebrow}
             </div>
           )}
 
-          <h1 className="text-4xl font-extrabold uppercase tracking-wide sm:text-5xl lg:text-6xl">
+          <h1 className="text-4xl font-extrabold uppercase tracking-wide sm:text-5xl 2xl:text-6xl">
             {slides[activeSlide]?.title}
           </h1>
 
           {slides[activeSlide]?.description && (
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80 sm:text-lg">
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80 2xl:text-lg">
               {slides[activeSlide].description}
             </p>
           )}

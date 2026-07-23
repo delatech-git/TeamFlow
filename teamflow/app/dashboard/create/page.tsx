@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Lightbulb } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { BackToDashboardLink } from "@/app/__components/layout/backToDashboardLink";
 import { SplitAuthFormLayout } from "@/app/__components/layout/splitAuthFormLayout";
 import { Button } from "@/app/__components/ui/button";
 import { Input } from "@/app/__components/ui/input";
@@ -52,8 +52,13 @@ export default function CreateIdeaPage() {
     });
   }
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const submitter = (e.nativeEvent as SubmitEvent).submitter as
+      | HTMLButtonElement
+      | null;
+    const status = submitter?.value === "draft" ? "DRAFT" : "NEW";
+
     setError("");
     setLoading(true);
     try {
@@ -62,6 +67,7 @@ export default function CreateIdeaPage() {
         shortDescription: shortDescription.trim(),
         coverImageFile,
         tagIds: Array.from(selectedTagIds),
+        status,
       });
       router.push("/dashboard");
       router.refresh();
@@ -80,16 +86,7 @@ export default function CreateIdeaPage() {
       image={createIdeaImage}
       imageAlt=""
       wideForm
-      footer={
-        <>
-          <Link
-            href="/dashboard"
-            className="font-semibold text-orange-400 underline decoration-orange-400/40 underline-offset-4 hover:text-orange-300"
-          >
-            Back to dashboard
-          </Link>
-        </>
-      }
+      footer={<BackToDashboardLink />}
     >
       <form onSubmit={onSubmit} className="flex flex-col gap-6">
         {error ? (
@@ -139,7 +136,7 @@ export default function CreateIdeaPage() {
           name="coverImage"
           label="Cover image"
           type="file"
-          accept="image/png,image/jpeg,image/webp"
+          accept="image/png,image/jpeg,image/webp,image/avif,image/gif"
           variant="authDark"
           onChange={(e) => {
             const file = e.target.files?.[0] ?? null;
@@ -177,17 +174,35 @@ export default function CreateIdeaPage() {
           </div>
         ) : null}
 
-        <Button
-          type="submit"
-          rounded
-          fullWidth
-          size="lg"
-          disabled={loading}
-          leadingIcon={<Lightbulb size={20} strokeWidth={2.25} />}
-          className="h-14 border-0 bg-orange-500 px-5 text-lg font-extrabold uppercase tracking-wide text-white shadow-lg shadow-orange-600/30 hover:bg-orange-400 focus-visible:ring-orange-400"
-        >
-          {loading ? "Creating…" : "Create idea"}
-        </Button>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button
+            type="submit"
+            name="intent"
+            value="publish"
+            rounded
+            fullWidth
+            size="lg"
+            disabled={loading}
+            leadingIcon={<Lightbulb size={20} strokeWidth={2.25} />}
+            className="h-14 border-0 bg-orange-500 px-5 text-lg font-extrabold uppercase tracking-wide text-white shadow-lg shadow-orange-600/30 hover:bg-orange-400 focus-visible:ring-orange-400"
+          >
+            {loading ? "Creating…" : "Create idea"}
+          </Button>
+
+          <Button
+            type="submit"
+            name="intent"
+            value="draft"
+            rounded
+            fullWidth
+            size="lg"
+            variant="secondary"
+            disabled={loading}
+            className="h-14 border-white/25 text-base font-bold normal-case tracking-normal text-white hover:bg-white/10 hover:text-white"
+          >
+            {loading ? "Saving…" : "Save as draft"}
+          </Button>
+        </div>
       </form>
     </SplitAuthFormLayout>
   );

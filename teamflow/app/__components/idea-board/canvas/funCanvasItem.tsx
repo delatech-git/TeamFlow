@@ -20,6 +20,7 @@ type FunCanvasItemProps = {
   onSaveEditing: () => void;
   onStartResize: (handle: ResizeHandle, event: MouseEvent<HTMLButtonElement>) => void;
   onStartRotate: (event: MouseEvent<HTMLButtonElement>) => void;
+  onDuplicate: () => void;
 };
 
 export default function FunCanvasItem({
@@ -36,6 +37,7 @@ export default function FunCanvasItem({
   onSaveEditing,
   onStartResize,
   onStartRotate,
+  onDuplicate,
 }: FunCanvasItemProps) {
   const itemRotation = item.rotation ?? 0;
   const emojiTool = item.kind === "emoji" ? getEmojiToolByValue(item.value) : null;
@@ -99,6 +101,7 @@ export default function FunCanvasItem({
           resizeLabelPrefix="canvas item"
           onStartResize={onStartResize}
           onStartRotate={onStartRotate}
+          onDuplicate={onDuplicate}
         />
       ) : null}
     </div>

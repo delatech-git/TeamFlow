@@ -31,14 +31,7 @@ export default function RegisterPage() {
 async function onSubmit(e: React.FormEvent) {
   e.preventDefault();
   setError("");
-
-  if (!avatarFile) {
-    setError("Please upload an avatar.");
-    return;
-  }
-
   setLoading(true);
-console.log(avatarFile,"avatar File");
   try {
     await registerAndSignIn({
       username: username.trim(),
@@ -145,7 +138,7 @@ console.log(avatarFile,"avatar File");
           name="avatar"
           label="Profile image"
           type="file"
-          accept="image/png,image/jpeg,image/webp"
+          accept="image/png,image/jpeg,image/webp,image/avif,image/gif"
           variant="authDark"
           onChange={(e) => {
             const file = e.target.files?.[0] ?? null;

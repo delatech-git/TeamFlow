@@ -11,3 +11,7 @@ export function authRegisterPath(): string {
 export function authMePath(): string {
   return buildProxyPath(["auth", "me"]);
 }
+
+export function authMeAvatarPath(): string {
+  return buildProxyPath(["auth", "me", "avatar"]);
+}

@@ -1,5 +1,5 @@
 import type { MouseEvent } from "react";
-import { RotateCw } from "lucide-react";
+import { Copy, RotateCw } from "lucide-react";
 import type { ResizeHandle } from "@/app/__components/idea-board/types";
 import { getResizeCursor } from "@/app/__components/idea-board/canvas/utils";
 
@@ -8,6 +8,7 @@ type SelectionControlsProps = {
   resizeLabelPrefix: string;
   onStartResize: (handle: ResizeHandle, event: MouseEvent<HTMLButtonElement>) => void;
   onStartRotate: (event: MouseEvent<HTMLButtonElement>) => void;
+  onDuplicate?: () => void;
 };
 
 export default function SelectionControls({
@@ -15,6 +16,7 @@ export default function SelectionControls({
   resizeLabelPrefix,
   onStartResize,
   onStartRotate,
+  onDuplicate,
 }: SelectionControlsProps) {
   return (
     <>
@@ -69,6 +71,21 @@ export default function SelectionControls({
           <RotateCw size={18} strokeWidth={1.9} aria-hidden="true" />
         </button>
       ))}
+      {onDuplicate ? (
+        <button
+          type="button"
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation();
+            onDuplicate();
+          }}
+          className="absolute -top-8 left-1/2 flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-full border border-[#8fa3e2] bg-[#f3f7ff] text-[#4a5fac] opacity-0 shadow-[0_4px_10px_rgba(28,38,85,0.2)] transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+          aria-label={`Duplicate ${resizeLabelPrefix}`}
+          title="Duplicate (Ctrl+D)"
+        >
+          <Copy size={14} strokeWidth={1.9} aria-hidden="true" />
+        </button>
+      ) : null}
     </>
   );
 }

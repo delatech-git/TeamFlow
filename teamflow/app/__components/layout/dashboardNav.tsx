@@ -16,7 +16,7 @@ export function DashboardNav({ className }: { className?: string }) {
         <Link
           key={link.href}
           href={link.href}
-          className="rounded-full border-2 border-white px-7 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-white hover:text-slate-950"
+          className="rounded-full border-2 border-white px-7 py-3 text-xs 2xl:text-sm font-bold uppercase tracking-wide text-white transition hover:bg-white hover:text-slate-950"
         >
           {link.label}
         </Link>

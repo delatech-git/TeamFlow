@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -20,7 +21,11 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { IdeasService } from './ideas.service';
 import { CreateIdeaMultipartDto } from './dto/createIdeaMultipartDto';
 import { SaveIdeaBoardDto } from './dto/save-idea-board.dto';
+import { UpdatePlannedGuideDto } from './dto/update-planned-guide.dto';
+import { UpdateIdeaStatusDto } from './dto/update-idea-status.dto';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth-guard';
+import { RolesGuard } from '@/auth/guards/roles.guard';
+import { Roles } from '@/common/decorators/roles.decorator';
 import {
   CurrentUser,
   CurrentUserPayload,
@@ -31,8 +36,11 @@ export class IdeasController {
   constructor(private readonly ideasService: IdeasService) {}
 
   @Get()
-  findAll(@Query('status') status?: string) {
-    return this.ideasService.findAll(status);
+  findAll(
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.ideasService.findAll(status, search);
   }
 
   @Get(':id')
@@ -55,7 +63,7 @@ export class IdeasController {
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addFileTypeValidator({
-          fileType: /(jpg|jpeg|png|webp)$/i,
+          fileType: /(jpg|jpeg|png|webp|avif|gif)$/i,
         })
         .addMaxSizeValidator({
           maxSize: 5 * 1024 * 1024,
@@ -72,10 +80,76 @@ export class IdeasController {
         title: dto.title,
         shortDescription: dto.shortDescription,
         tagIds: parseTagIds(dto.tagIds),
+        status: dto.status,
       },
       user.id,
       coverImage,
     );
+  }
+
+  @Patch(':id/status')
+  @UseGuards(JwtAuthGuard)
+  updateStatus(@Param('id') id: string, @Body() dto: UpdateIdeaStatusDto) {
+    return this.ideasService.updateStatus(id, dto.status);
+  }
+
+  @Post(':id/team-photos')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('photo', {
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
+  addTeamPhoto(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserPayload,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: /(jpg|jpeg|png|webp|avif|gif)$/i,
+        })
+        .addMaxSizeValidator({
+          maxSize: 5 * 1024 * 1024,
+        })
+        .build({
+          fileIsRequired: true,
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        }),
+    )
+    photo: Express.Multer.File,
+  ) {
+    return this.ideasService.addTeamPhoto(id, user.id, photo);
+  }
+
+  @Patch(':id/cover-image')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('coverImage', {
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
+  updateCoverImage(
+    @Param('id') id: string,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: /(jpg|jpeg|png|webp|avif|gif)$/i,
+        })
+        .addMaxSizeValidator({
+          maxSize: 5 * 1024 * 1024,
+        })
+        .build({
+          fileIsRequired: true,
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        }),
+    )
+    coverImage: Express.Multer.File,
+  ) {
+    return this.ideasService.updateCoverImage(id, coverImage);
   }
 
   @Put(':id/board')
@@ -88,53 +162,21 @@ export class IdeasController {
     return this.ideasService.saveBoard(id, dto, user.id);
   }
 
+  @Put(':id/planned-guide')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  updatePlannedGuide(
+    @Param('id') id: string,
+    @Body() dto: UpdatePlannedGuideDto,
+  ) {
+    return this.ideasService.updatePlannedGuide(id, dto.summary);
+  }
+
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(JwtAuthGuard)
   remove(@Param('id') id: string) {
     return this.ideasService.remove(id);
-  }
-
-  @Get(':id/photos')
-  findPhotos(@Param('id') id: string) {
-    return this.ideasService.findPhotos(id);
-  }
-
-  @Post(':id/photos')
-  @UseGuards(JwtAuthGuard)
-  @UseInterceptors(
-    FileInterceptor('photo', {
-      limits: {
-        fileSize: 5 * 1024 * 1024,
-      },
-    }),
-  )
-  addPhoto(
-    @Param('id') id: string,
-    @CurrentUser() user: CurrentUserPayload,
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addFileTypeValidator({
-          fileType: /(jpg|jpeg|png|webp)$/i,
-        })
-        .addMaxSizeValidator({
-          maxSize: 5 * 1024 * 1024,
-        })
-        .build({
-          fileIsRequired: true,
-          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        }),
-    )
-    photo: Express.Multer.File,
-  ) {
-    return this.ideasService.addPhoto(id, photo, user.id);
-  }
-
-  @Delete(':id/photos/:photoId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(JwtAuthGuard)
-  removePhoto(@Param('id') id: string, @Param('photoId') photoId: string) {
-    return this.ideasService.removePhoto(id, photoId);
   }
 }
 

@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Search, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
 
 import teamTideLogo from "@/assets/teamtideLogo.png";
 import { Input } from "../ui/input";
@@ -11,8 +12,9 @@ import { cn } from "../ui/utils";
 import { HeaderProfileMenu } from "./headerProfileMenu";
 
 export default function Header() {
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -21,20 +23,31 @@ export default function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const submitSearch = (e: FormEvent) => {
+    e.preventDefault();
+    const query = searchValue.trim();
+    if (!query) return;
+    router.push(`/discover-ideas?q=${encodeURIComponent(query)}`);
+  };
+
   const searchField = (
-    <Input
-      variant="glass"
-      type="search"
-      placeholder="Search ideas, events, people..."
-      leadingIcon={
-        <Search
-          size={14}
-          strokeWidth={1.9}
-          aria-hidden={true}
-          className="text-white/66"
-        />
-      }
-    />
+    <form onSubmit={submitSearch}>
+      <Input
+        variant="glass"
+        type="search"
+        placeholder="Search ideas, events, people..."
+        value={searchValue}
+        onChange={(e) => setSearchValue(e.target.value)}
+        leadingIcon={
+          <Search
+            size={14}
+            strokeWidth={1.9}
+            aria-hidden={true}
+            className="text-white/66"
+          />
+        }
+      />
+    </form>
   );
 
   return (
@@ -70,49 +83,9 @@ export default function Header() {
             {searchField}
           </div>
 
-          <button
-            type="button"
-            className="flex shrink-0 md:hidden"
-            aria-label="Open search"
-            onClick={() => setMobileSearchOpen(true)}
-          >
-            <Search className="h-5 w-5 text-white" />
-          </button>
-
           <HeaderProfileMenu />
         </div>
       </div>
-
-      {mobileSearchOpen ? (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm md:hidden">
-          <div className="flex h-20 items-center gap-3 px-4">
-            <button
-              type="button"
-              className="shrink-0"
-              aria-label="Close search"
-              onClick={() => setMobileSearchOpen(false)}
-            >
-              <X className="h-5 w-5 text-white" />
-            </button>
-            <div className="min-w-0 flex-1">
-              <Input
-                variant="glass"
-                type="search"
-                placeholder="Search..."
-                autoFocus
-                leadingIcon={
-                  <Search
-                    size={14}
-                    strokeWidth={1.9}
-                    aria-hidden={true}
-                    className="text-white/66"
-                  />
-                }
-              />
-            </div>
-          </div>
-        </div>
-      ) : null}
     </header>
   );
 }

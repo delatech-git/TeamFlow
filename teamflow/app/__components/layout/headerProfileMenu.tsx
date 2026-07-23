@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Camera, LogOut, UserRound } from "lucide-react";
+import { Camera, LogOut, UserRound, Users } from "lucide-react";
 
 import { cn } from "../ui/utils";
 import {
@@ -216,7 +217,7 @@ export function HeaderProfileMenu() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept="image/png,image/jpeg,image/webp,image/avif,image/gif"
             className="hidden"
             onChange={onAvatarChange}
           />
@@ -227,11 +228,26 @@ export function HeaderProfileMenu() {
             </p>
           ) : null}
 
+          {user.role === "ADMIN" ? (
+            <Link
+              href="/admin/users"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="mt-4 flex w-full items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50"
+            >
+              <Users size={16} className="text-slate-600" aria-hidden />
+              Manage users
+            </Link>
+          ) : null}
+
           <button
             type="button"
             role="menuitem"
             onClick={onLogout}
-            className="mt-4 flex w-full items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50"
+            className={[
+              "flex w-full items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50",
+              user.role === "ADMIN" ? "mt-2" : "mt-4",
+            ].join(" ")}
           >
             <LogOut size={16} className="text-slate-600" aria-hidden />
             Log out
