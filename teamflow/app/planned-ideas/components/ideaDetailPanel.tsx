@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Camera, ChevronDown, LayoutGrid, Pencil, Share2, Sparkles, X } from "lucide-react";
+import { Camera, CheckCircle2, ChevronDown, LayoutGrid, Pencil, Share2, Star, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Components } from "react-markdown";
@@ -25,11 +25,28 @@ function splitGuideSections(markdown: string): string[] {
     .filter(Boolean);
 }
 
+function splitHeadingEmoji(text: string): { emoji: string; title: string } {
+  const match = text.trim().match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})️?\s*(.*)$/u);
+  return match ? { emoji: match[1], title: match[2] } : { emoji: "✨", title: text };
+}
+
 function getGuideMarkdownComponents(accent: Accent): Components {
   return {
-    h2: ({ children }) => (
-      <p className={`text-sm font-semibold ${accent.text}`}>{children}</p>
-    ),
+    h2: ({ children }) => {
+      const text = Array.isArray(children) ? children.join("") : String(children ?? "");
+      const { emoji, title } = splitHeadingEmoji(text);
+      return (
+        <div className="flex items-center gap-3">
+          <span
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg shadow-md ${accent.solidBg}`}
+            aria-hidden
+          >
+            {emoji}
+          </span>
+          <p className={`text-base font-bold ${accent.text}`}>{title}</p>
+        </div>
+      );
+    },
     p: ({ children }) => (
       <p className="text-sm leading-6 text-slate-300">{children}</p>
     ),
@@ -125,7 +142,7 @@ export function IdeaDetailPanel({
 
   if (!selectedIdeaView) {
     return (
-      <section className="rounded-2xl border border-cyan-400/10 bg-[#0b1424] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.4)] sm:p-5">
+      <section className="rounded-2xl border border-cyan-400/25 bg-[#0b1424] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.4)] sm:p-5">
         <div className="rounded-2xl border border-slate-700/40 bg-[#0a1221] p-6 text-sm text-slate-400">
           Pick a planned idea from the left panel.
         </div>
@@ -134,7 +151,7 @@ export function IdeaDetailPanel({
   }
 
   return (
-    <section className="rounded-2xl border border-cyan-400/10 bg-[#0b1424] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.4)] sm:p-5">
+    <section className="rounded-2xl border border-cyan-400/25 bg-[#0b1424] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.4)] sm:p-5">
       <div
         className="relative overflow-hidden rounded-2xl border border-slate-700/40 bg-[#0a1221] bg-cover bg-center p-4"
         style={
@@ -147,8 +164,8 @@ export function IdeaDetailPanel({
           <div className="absolute inset-0 bg-[#0a1221]/80" />
         ) : null}
         <div className="relative flex items-center justify-between gap-3">
-          <p className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-cyan-200">
-            <Sparkles size={12} aria-hidden />
+          <p className="inline-flex items-center gap-1 rounded-full border border-cyan-400/50 bg-cyan-500/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-cyan-200">
+            <Star size={12} aria-hidden />
             Planned idea
           </p>
           <Link
@@ -205,7 +222,8 @@ export function IdeaDetailPanel({
               </>
             ) : (
               <>
-                <span className="rounded-full border border-emerald-300/30 bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-200">
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/50 bg-emerald-400/15 px-2.5 py-1 text-xs font-semibold text-emerald-200">
+                  <CheckCircle2 size={13} aria-hidden />
                   Ready
                 </span>
                 {canEditGuide ? (
@@ -252,7 +270,7 @@ export function IdeaDetailPanel({
                     return (
                       <article
                         key={`${section.slice(0, 30)}-${index}`}
-                        className={`rounded-xl border ${accent.border} ${accent.bg} p-4`}
+                        className={`rounded-xl border border-l-4 ${accent.border} ${accent.bg} p-4 shadow-[0_8px_24px_rgba(0,0,0,0.25)]`}
                       >
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}

@@ -205,7 +205,7 @@ function CommentEditForm({
           type="button"
           disabled={saving || draft.trim().length === 0}
           onClick={() => onSubmit(draft)}
-          className="rounded-lg bg-linear-to-r from-cyan-500 to-blue-600 px-2.5 py-1 text-xs font-semibold text-white shadow-[0_0_12px_rgba(34,211,238,0.3)] transition hover:shadow-[0_0_18px_rgba(34,211,238,0.45)] disabled:cursor-not-allowed disabled:opacity-45"
+          className="rounded-lg bg-linear-to-r from-blue-500 to-violet-600 px-2.5 py-1 text-xs font-semibold text-white shadow-[0_0_12px_rgba(139,92,246,0.3)] transition hover:shadow-[0_0_18px_rgba(139,92,246,0.45)] disabled:cursor-not-allowed disabled:opacity-45"
         >
           {saving ? "Saving..." : "Save"}
         </button>
@@ -246,7 +246,7 @@ function CommentReplyForm({
           type="button"
           disabled={posting || draft.trim().length === 0}
           onClick={() => onSubmit(draft)}
-          className="rounded-lg bg-linear-to-r from-cyan-500 to-blue-600 px-2.5 py-1 text-xs font-semibold text-white shadow-[0_0_12px_rgba(34,211,238,0.3)] transition hover:shadow-[0_0_18px_rgba(34,211,238,0.45)] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:shadow-[0_0_12px_rgba(34,211,238,0.3)]"
+          className="rounded-lg bg-linear-to-r from-blue-500 to-violet-600 px-2.5 py-1 text-xs font-semibold text-white shadow-[0_0_12px_rgba(139,92,246,0.3)] transition hover:shadow-[0_0_18px_rgba(139,92,246,0.45)] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:shadow-[0_0_12px_rgba(139,92,246,0.3)]"
         >
           {posting ? "Posting..." : "Reply"}
         </button>
@@ -477,7 +477,7 @@ export function DiscussionPanel({
     topLevelComments.length > COMMENTS_PAGE_SIZE && !hasMore;
 
   return (
-    <aside className="rounded-2xl border border-cyan-400/10 bg-[#0b1424] p-3 shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
+    <aside className="rounded-2xl border border-cyan-400/25 bg-[#0b1424] p-3 shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
       <div className="flex items-center justify-between border-b border-slate-700/40 pb-3">
         <p className="text-xs uppercase tracking-[0.16em] text-cyan-300/80">
           Discussion
@@ -501,7 +501,7 @@ export function DiscussionPanel({
           disabled={
             postingComment || !selectedIdeaId || commentDraft.trim().length === 0
           }
-          className="mt-2 w-full rounded-lg bg-linear-to-r from-cyan-500 to-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-[0_0_18px_rgba(34,211,238,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_0_26px_rgba(34,211,238,0.5)] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0 disabled:hover:shadow-[0_0_18px_rgba(34,211,238,0.35)]"
+          className="mt-2 w-full rounded-lg bg-linear-to-r from-blue-500 to-violet-600 px-3 py-2 text-sm font-semibold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_0_26px_rgba(139,92,246,0.5)] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0 disabled:hover:shadow-[0_0_18px_rgba(139,92,246,0.35)]"
         >
           {postingComment ? "Posting..." : "Post comment"}
         </button>

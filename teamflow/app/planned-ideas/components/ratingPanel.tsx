@@ -96,7 +96,7 @@ export function RatingPanel({
       ?.value ?? 0;
 
   return (
-    <section className="rounded-2xl border border-cyan-400/10 bg-[#0b1424] p-3 shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
+    <section className="rounded-2xl border border-cyan-400/25 bg-[#0b1424] p-3 shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.16em] text-cyan-300/80">

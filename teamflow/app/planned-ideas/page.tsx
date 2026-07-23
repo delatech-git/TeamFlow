@@ -46,7 +46,7 @@ export default function PlannedIdeasPage() {
 
   return (
     <section className="min-h-screen bg-[#050b16] px-4 pb-8 pt-25 text-slate-100 sm:px-6 lg:px-8">
-      <div className="mx-auto mb-4 flex max-w-425 flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-400/10 bg-[#0b1424] px-4 py-3">
+      <div className="mx-auto mb-4 flex max-w-425 flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-400/25 bg-[#0b1424] px-4 py-3">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-cyan-300/80">
             TeamTide
