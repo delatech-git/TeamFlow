@@ -1,7 +1,8 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, Download, Sparkles } from "lucide-react";
 import FunDashboard from "@/app/__components/idea-board/funDashboard";
 import { LoadingOverlay } from "@/app/__components/ui/loadingOverlay";
 import NotebookPad from "@/app/__components/idea-board/notebookPad";
@@ -76,6 +77,48 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
     startEditingConnectionLabel,
     saveEditingConnectionLabel,
   } = useIdeaBoardCanvas(idea);
+
+  const boardContentRef = useRef<HTMLDivElement>(null);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+
+  const handleExportPdf = async () => {
+    const contentEl = boardContentRef.current;
+    if (!contentEl || isExportingPdf) return;
+    setIsExportingPdf(true);
+    try {
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import("html2canvas-pro"),
+        import("jspdf"),
+      ]);
+      const canvas = await html2canvas(contentEl, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        width: CANVAS_WIDTH,
+        height: CANVAS_HEIGHT,
+        onclone: (_doc, clonedEl) => {
+          clonedEl.style.transform = "none";
+        },
+      });
+      const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "px",
+        format: [canvas.width, canvas.height],
+      });
+      pdf.addImage(
+        canvas.toDataURL("image/png"),
+        "PNG",
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      );
+      pdf.save(`${idea.slug}-idea-board.pdf`);
+    } catch (error) {
+      console.error("Failed to export idea board as PDF", error);
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
 
   return (
     <div className="space-y-3">
@@ -161,9 +204,18 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
             style={{ animationDelay: "80ms" }}
           >
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/62">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600">
                 Drag tools from left - Ctrl + Wheel to zoom
               </p>
+              <button
+                type="button"
+                onClick={handleExportPdf}
+                disabled={isExportingPdf}
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-950/60 bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-50"
+              >
+                <Download size={12} aria-hidden />
+                {isExportingPdf ? "Exporting..." : "Export as PDF"}
+              </button>
             </div>
 
             <div
@@ -174,6 +226,7 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
               }}
             >
               <div
+                ref={boardContentRef}
                 className="relative"
                 style={{
                   width: CANVAS_WIDTH,
@@ -183,7 +236,7 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
                 }}
               >
                 {notes.length === 0 ? (
-                  <p className="mt-3 text-sm text-white/68">
+                  <p className="mt-3 text-sm text-slate-600">
                     No suggestions yet. Add the first sticky note for this idea.
                   </p>
                 ) : null}
