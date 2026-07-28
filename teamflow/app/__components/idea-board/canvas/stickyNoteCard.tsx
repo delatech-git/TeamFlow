@@ -6,6 +6,7 @@ import type { StickyNote } from "@/src/entities/models/idea-board";
 type StickyNoteCardProps = {
   note: StickyNote;
   isSelected: boolean;
+  isConnectSource: boolean;
   isPinned: boolean;
   isPinMode: boolean;
   isEditing: boolean;
@@ -23,6 +24,7 @@ type StickyNoteCardProps = {
 export default function StickyNoteCard({
   note,
   isSelected,
+  isConnectSource,
   isPinned,
   isPinMode,
   isEditing,
@@ -46,6 +48,7 @@ export default function StickyNoteCard({
       className={[
         "group absolute rounded-xl border border-black/15 p-3 text-sm text-[#2c213f] shadow-[0_18px_30px_rgba(3,8,26,0.32)] backdrop-blur-[1px]",
         isSelected ? "ring-2 ring-[rgba(94,228,255,0.85)]" : "",
+        isConnectSource ? "ring-4 ring-sky-400" : "",
         isPinMode ? "cursor-pointer" : "cursor-move",
       ].join(" ")}
       style={{
@@ -54,7 +57,11 @@ export default function StickyNoteCard({
         width: note.width,
         height: note.height,
         backgroundColor: note.color,
-        boxShadow: isPinned ? "0 0 0 3px rgba(251, 191, 36, 0.65), 0 16px 24px rgba(6,4,18,0.22)" : "0 16px 24px rgba(6,4,18,0.22)",
+        boxShadow: isConnectSource
+          ? "0 0 0 3px rgba(56,189,248,0.85), 0 16px 24px rgba(6,4,18,0.22)"
+          : isPinned
+            ? "0 0 0 3px rgba(251, 191, 36, 0.65), 0 16px 24px rgba(6,4,18,0.22)"
+            : "0 16px 24px rgba(6,4,18,0.22)",
         transform: `rotate(${noteRotation}deg)`,
         transformOrigin: "center",
       }}

@@ -11,6 +11,7 @@ type FunCanvasItemProps = {
   textStyle: TextItemStyle;
   shapeStyle: ShapeItemStyle;
   isSelected: boolean;
+  isConnectSource: boolean;
   isEditingText: boolean;
   editingTextValue: string;
   onMouseDown: (event: MouseEvent<HTMLElement>) => void;
@@ -28,6 +29,7 @@ export default function FunCanvasItem({
   textStyle,
   shapeStyle,
   isSelected,
+  isConnectSource,
   isEditingText,
   editingTextValue,
   onMouseDown,
@@ -57,7 +59,11 @@ export default function FunCanvasItem({
         top: item.y,
         width: item.width,
         height: item.height,
-        boxShadow: isSelected ? "0 0 0 2px rgba(94,228,255,0.75)" : "none",
+        boxShadow: isConnectSource
+          ? "0 0 0 3px rgba(56,189,248,0.9)"
+          : isSelected
+            ? "0 0 0 2px rgba(94,228,255,0.75)"
+            : "none",
         fontSize: item.kind === "text" ? `${textStyle.fontSize}px` : undefined,
         color: item.kind === "text" ? textStyle.color : undefined,
         transform: `rotate(${itemRotation}deg)`,

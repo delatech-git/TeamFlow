@@ -198,6 +198,10 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
                       key={note.id}
                       note={note}
                       isSelected={isSelected}
+                      isConnectSource={
+                        connectFromItem?.kind === "note" &&
+                        connectFromItem.id === note.id
+                      }
                       isPinned={pinnedNoteIds.includes(note.id)}
                       isPinMode={isPinMode}
                       isEditing={editingNoteId === note.id}
@@ -282,6 +286,10 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
                       textStyle={textStyle}
                       shapeStyle={shapeStyle}
                       isSelected={isSelected}
+                      isConnectSource={
+                        connectFromItem?.kind === "fun" &&
+                        connectFromItem.id === item.id
+                      }
                       isEditingText={editingFunTextId === item.id}
                       editingTextValue={editingFunTextValue}
                       onMouseDown={(event) => {
