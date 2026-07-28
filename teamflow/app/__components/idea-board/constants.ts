@@ -69,8 +69,6 @@ export const SHAPE_TOOLS = [
   { type: "pentagon", label: "Pentagon", icon: "\u2B20" },
   { type: "hexagon", label: "Hexagon", icon: "\u2B21" },
   { type: "star", label: "Star", icon: "\u2606" },
-  { type: "arrow", label: "Arrow", icon: "\u279C" },
-  { type: "line", label: "Line", icon: "\uFF0F" },
 ] as const;
 
 export const NOTE_PAD_COLORS = ["#ffe082", "#f8bbd0", "#b3e5fc", "#c5e1a5", "#ffcc80", "#d1c4e9"] as const;
