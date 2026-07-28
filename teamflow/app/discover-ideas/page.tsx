@@ -21,8 +21,10 @@ import { fetchCurrentUser } from "@/src/infrastructure/api/auth/client";
 import { getAccessToken } from "@/src/infrastructure/auth/session";
 
 const heroSlides = [
+  
   {
     title: "Plan better together",
+
     description: "Create and manage events with your team.",
     image: HeroImage,
   },
@@ -285,6 +287,7 @@ export default function DiscoverIdeasPage() {
                 </Button>
               </div>
             )}
+
 
             {!hasMore && filteredIdeas.length > 0 && (
               <p className="mt-10 text-center text-sm text-white/50">

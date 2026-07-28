@@ -43,11 +43,14 @@ export type FunDashboardProps = {
   selectedShapeItem: FunItem | null;
   selectedTool: SelectedBoardTool | null;
   isGeneratingGuide: boolean;
+  isConnectMode: boolean;
+  connectFromItem: { kind: "note" | "fun"; id: string } | null;
   onTogglePinMode: () => void;
   onGenerateSummary: () => void | Promise<void>;
   onSelectTool: (toolKind: FunItem["kind"], value: string) => void;
   onChangeTextStyle: (patch: Partial<TextItemStyle>) => void;
   onChangeShapeStyle: (patch: Partial<ShapeItemStyle>) => void;
+  onToggleConnectMode: () => void;
 };
 
 export type NotebookPadProps = {

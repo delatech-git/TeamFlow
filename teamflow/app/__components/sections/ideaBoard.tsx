@@ -7,6 +7,7 @@ import { LoadingOverlay } from "@/app/__components/ui/loadingOverlay";
 import NotebookPad from "@/app/__components/idea-board/notebookPad";
 import FunCanvasItem from "@/app/__components/idea-board/canvas/funCanvasItem";
 import StickyNoteCard from "@/app/__components/idea-board/canvas/stickyNoteCard";
+import ConnectionLayer from "@/app/__components/idea-board/canvas/connectionLayer";
 import type { IdeaBoardProps } from "@/app/__components/idea-board/types";
 import {
   CANVAS_HEIGHT,
@@ -61,6 +62,19 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
     updateSelectedTextStyle,
     updateSelectedShapeStyle,
     onNoteToolDragStart,
+    connections,
+    isConnectMode,
+    connectFromItem,
+    selectedConnectionId,
+    setSelectedConnectionId,
+    editingConnectionId,
+    editingConnectionLabel,
+    setEditingConnectionLabel,
+    toggleConnectMode,
+    cancelPendingConnection,
+    handleConnectableItemClick,
+    startEditingConnectionLabel,
+    saveEditingConnectionLabel,
   } = useIdeaBoardCanvas(idea);
 
   return (
@@ -122,6 +136,11 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
                 "[data-canvas-item='true']",
               );
               if (!clickedCanvasItem) {
+                if (isConnectMode) {
+                  cancelPendingConnection();
+                  setSelectedConnectionId(null);
+                  return;
+                }
                 if (selectedBoardTool) {
                   placeSelectedToolAtClientPosition(
                     event.clientX,
@@ -132,17 +151,20 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
                 setSelectedCanvasItem(null);
                 setSelectedTextItemId(null);
                 setSelectedShapeItemId(null);
+                setSelectedConnectionId(null);
               }
             }}
             className={[
               "tf-board-shell tf-animate-in relative min-h-[calc(100vh-190px)] overflow-auto rounded-2xl bg-transparent p-3 sm:p-4",
-              selectedBoardTool ? "cursor-crosshair" : "",
+              selectedBoardTool || isConnectMode ? "cursor-crosshair" : "",
             ].join(" ")}
             style={{ animationDelay: "80ms" }}
           >
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/62">
-              Drag tools from left - Ctrl + Wheel to zoom
-            </p>
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/62">
+                Drag tools from left - Ctrl + Wheel to zoom
+              </p>
+            </div>
 
             <div
               className="relative overflow-hidden rounded-[18px] bg-transparent"
@@ -181,6 +203,11 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
                       isEditing={editingNoteId === note.id}
                       editingText={editingText}
                       onMouseDown={(event) => {
+                        if (isConnectMode) {
+                          event.preventDefault();
+                          handleConnectableItemClick("note", note.id);
+                          return;
+                        }
                         if (isPinMode && isAdminMode) {
                           event.preventDefault();
                           if (selectedCanvasItem?.kind === "note") {
@@ -258,14 +285,21 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
                       isEditingText={editingFunTextId === item.id}
                       editingTextValue={editingFunTextValue}
                       onMouseDown={(event) => {
+                        if (isConnectMode) {
+                          event.preventDefault();
+                          handleConnectableItemClick("fun", item.id);
+                          return;
+                        }
                         if (editingFunTextId === item.id) return;
                         startMove("fun", item, event);
                       }}
                       onDoubleClick={() => {
+                        if (isConnectMode) return;
                         if (item.kind === "text") {
                           startEditingFunText(item);
                           setSelectedShapeItemId(null);
                         } else if (item.kind === "shape") {
+                          startEditingFunText(item);
                           setSelectedShapeItemId(item.id);
                           setSelectedTextItemId(null);
                         } else {
@@ -274,6 +308,7 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
                         }
                       }}
                       onClick={() => {
+                        if (isConnectMode) return;
                         setSelectedCanvasItem({
                           kind: "fun",
                           id: item.id,
@@ -310,6 +345,37 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
                     />
                   );
                 })}
+
+                <ConnectionLayer
+                  connections={connections}
+                  items={[
+                    ...notes.map((note) => ({
+                      kind: "note" as const,
+                      id: note.id,
+                      x: note.x,
+                      y: note.y,
+                      width: note.width,
+                      height: note.height,
+                    })),
+                    ...funItems.map((item) => ({
+                      kind: "fun" as const,
+                      id: item.id,
+                      x: item.x,
+                      y: item.y,
+                      width: item.width,
+                      height: item.height,
+                    })),
+                  ]}
+                  width={CANVAS_WIDTH}
+                  height={CANVAS_HEIGHT}
+                  selectedConnectionId={selectedConnectionId}
+                  editingConnectionId={editingConnectionId}
+                  editingConnectionLabel={editingConnectionLabel}
+                  onSelectConnection={setSelectedConnectionId}
+                  onDoubleClickConnection={startEditingConnectionLabel}
+                  onEditingLabelChange={setEditingConnectionLabel}
+                  onSaveEditingLabel={saveEditingConnectionLabel}
+                />
               </div>
             </div>
           </div>
@@ -327,11 +393,14 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
         selectedShapeItem={selectedShapeItem}
         selectedTool={selectedBoardTool}
         isGeneratingGuide={isGeneratingGuide}
+        isConnectMode={isConnectMode}
+        connectFromItem={connectFromItem}
         onTogglePinMode={togglePinMode}
         onGenerateSummary={generateSummaryPreview}
         onSelectTool={selectBoardTool}
         onChangeTextStyle={updateSelectedTextStyle}
         onChangeShapeStyle={updateSelectedShapeStyle}
+        onToggleConnectMode={toggleConnectMode}
       />
     </div>
   );

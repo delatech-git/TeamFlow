@@ -73,7 +73,22 @@ export default function FunCanvasItem({
           className="h-full w-full resize-none border-0 bg-transparent px-1 py-0 text-sm text-inherit caret-current outline-none"
         />
       ) : item.kind === "shape" ? (
-        <ShapePreview shapeType={item.shapeType ?? "rectangle"} shapeStyle={shapeStyle} />
+        <>
+          <ShapePreview shapeType={item.shapeType ?? "rectangle"} shapeStyle={shapeStyle} />
+          {isEditingText ? (
+            <textarea
+              autoFocus
+              value={editingTextValue}
+              onChange={(event) => onEditingTextChange(event.target.value)}
+              onBlur={onSaveEditing}
+              className="absolute inset-0 h-full w-full resize-none border-0 bg-transparent px-2 text-center text-sm text-black caret-current outline-none"
+            />
+          ) : item.label ? (
+            <span className="pointer-events-none absolute inset-0 flex items-center justify-center break-words px-2 text-center text-sm font-medium text-black">
+              {item.label}
+            </span>
+          ) : null}
+        </>
       ) : item.kind === "emoji" ? (
         emojiTool ? (
           <LottieEmoji

@@ -32,10 +32,10 @@ export const DEFAULT_TEXT_STYLE: TextItemStyle = {
 
 export const DEFAULT_SHAPE_STYLE: ShapeItemStyle = {
   bordered: true,
-  borderWidth: 2,
+  borderWidth: 1,
   borderStyle: "solid",
-  borderColor: "#ffffff",
-  background: "#8b7cff",
+  borderColor: "#000000",
+  background: "#ffffff",
   backgroundOpacity: 1,
 };
 
@@ -173,6 +173,23 @@ export function withOpacity(color: string, opacity: number) {
 
   if ([red, green, blue].some(Number.isNaN)) return color;
   return `rgba(${red}, ${green}, ${blue}, ${clampedOpacity})`;
+}
+
+export function clipPointToRectEdge(
+  centerX: number,
+  centerY: number,
+  width: number,
+  height: number,
+  towardX: number,
+  towardY: number,
+) {
+  const dx = towardX - centerX;
+  const dy = towardY - centerY;
+  if (dx === 0 && dy === 0) return { x: centerX, y: centerY };
+  const scaleX = dx !== 0 ? width / 2 / Math.abs(dx) : Infinity;
+  const scaleY = dy !== 0 ? height / 2 / Math.abs(dy) : Infinity;
+  const scale = Math.min(scaleX, scaleY);
+  return { x: centerX + dx * scale, y: centerY + dy * scale };
 }
 
 export function getShapeFill(shapeType: ShapeType, shapeStyle: ShapeItemStyle) {

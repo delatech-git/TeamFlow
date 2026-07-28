@@ -183,6 +183,7 @@ export class IdeasService {
     const pinnedNoteIds = Array.isArray(dto.pinnedNoteIds)
       ? dto.pinnedNoteIds
       : [];
+    const connections = Array.isArray(dto.connections) ? dto.connections : [];
 
     const stickers = [
       ...notes.map((note) => ({
@@ -216,6 +217,7 @@ export class IdeasService {
           pinnedNoteIds,
           summaryPreview: dto.summaryPreview ?? '',
           postedDecisionId: dto.postedDecisionId ?? null,
+          connections,
         }),
         x: 0,
         y: 0,

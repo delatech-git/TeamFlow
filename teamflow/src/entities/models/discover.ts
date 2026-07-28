@@ -43,6 +43,7 @@ function decodeBoardState(dto: IdeaResponseDto): IdeaBoardState | null {
 
   const notes: IdeaBoardState["notes"] = [];
   const funItems: IdeaBoardState["funItems"] = [];
+  let connections: IdeaBoardState["connections"] = [];
   let pinnedNoteIds: string[] = [];
   let summaryPreview = "";
   let postedDecisionId: string | null = null;
@@ -57,6 +58,7 @@ function decodeBoardState(dto: IdeaResponseDto): IdeaBoardState | null {
             pinnedNoteIds?: string[];
             summaryPreview?: string;
             postedDecisionId?: string | null;
+            connections?: IdeaBoardState["connections"];
           };
 
       if (parsed.kind === "note" && parsed.note) {
@@ -73,6 +75,7 @@ function decodeBoardState(dto: IdeaResponseDto): IdeaBoardState | null {
         pinnedNoteIds = Array.isArray(parsed.pinnedNoteIds) ? parsed.pinnedNoteIds : [];
         summaryPreview = typeof parsed.summaryPreview === "string" ? parsed.summaryPreview : "";
         postedDecisionId = typeof parsed.postedDecisionId === "string" ? parsed.postedDecisionId : null;
+        connections = Array.isArray(parsed.connections) ? parsed.connections : [];
       }
     } catch {
       if (sticker.type === "NOTE") {
@@ -94,6 +97,7 @@ function decodeBoardState(dto: IdeaResponseDto): IdeaBoardState | null {
   return {
     notes,
     funItems,
+    connections,
     pinnedNoteIds,
     summaryPreview,
     postedDecisionId,

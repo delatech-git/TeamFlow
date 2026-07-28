@@ -7,6 +7,10 @@ export class SaveIdeaBoardDto {
   @IsArray()
   funItems!: unknown[];
 
+  @IsOptional()
+  @IsArray()
+  connections?: unknown[];
+
   @IsArray()
   @IsString({ each: true })
   pinnedNoteIds!: string[];

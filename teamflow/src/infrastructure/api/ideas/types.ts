@@ -77,6 +77,7 @@ export type PlannedGuideDto = {
 export type SaveIdeaBoardBody = {
   notes: unknown[];
   funItems: unknown[];
+  connections: unknown[];
   pinnedNoteIds: string[];
   summaryPreview: string;
   postedDecisionId: string | null;

@@ -27,6 +27,8 @@ import {
 import { clamp, readDragPayload } from "@/app/__components/idea-board/utils";
 import { requestPlannedGuide } from "@/app/__components/idea-board/summaryApi";
 import type {
+  Connection,
+  ConnectableKind,
   FunItem,
   ShapeItemStyle,
   ShapeType,
@@ -57,6 +59,21 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
   const [selectedShapeItemId, setSelectedShapeItemId] = useState<string | null>(
     null,
   );
+  const [connections, setConnections] = useState<Connection[]>(
+    () => idea.boardState?.connections ?? [],
+  );
+  const [isConnectMode, setIsConnectMode] = useState(false);
+  const [connectFromItem, setConnectFromItem] = useState<{
+    kind: ConnectableKind;
+    id: string;
+  } | null>(null);
+  const [selectedConnectionId, setSelectedConnectionId] = useState<
+    string | null
+  >(null);
+  const [editingConnectionId, setEditingConnectionId] = useState<
+    string | null
+  >(null);
+  const [editingConnectionLabel, setEditingConnectionLabel] = useState("");
   const [resizeState, setResizeState] = useState<{
     target: ResizeTarget;
     id: string;
@@ -141,6 +158,7 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
       void saveIdeaBoard(idea.id, {
         notes,
         funItems,
+        connections,
         pinnedNoteIds,
         summaryPreview,
         postedDecisionId,
@@ -158,6 +176,7 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
     idea.id,
     notes,
     funItems,
+    connections,
     pinnedNoteIds,
     summaryPreview,
     postedDecisionId,
@@ -379,6 +398,13 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
       if (selectedShapeItemId === itemId) {
         setSelectedShapeItemId(null);
       }
+      setConnections((prev) =>
+        prev.filter(
+          (connection) =>
+            !(connection.fromKind === "fun" && connection.fromId === itemId) &&
+            !(connection.toKind === "fun" && connection.toId === itemId),
+        ),
+      );
     },
     [
       moveState,
@@ -452,6 +478,7 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
       await saveIdeaBoard(idea.id, {
         notes,
         funItems,
+        connections,
         pinnedNoteIds,
         summaryPreview,
         postedDecisionId,
@@ -501,6 +528,13 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
         setEditingNoteId(null);
         setEditingText("");
       }
+      setConnections((prev) =>
+        prev.filter(
+          (connection) =>
+            !(connection.fromKind === "note" && connection.fromId === noteId) &&
+            !(connection.toKind === "note" && connection.toId === noteId),
+        ),
+      );
     },
     [moveState, rotateState, selectedCanvasItem, editingNoteId],
   );
@@ -528,27 +562,37 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
   };
 
   const startEditingFunText = (item: FunItem) => {
-    if (item.kind !== "text") return;
-    setEditingFunTextId(item.id);
-    setEditingFunTextValue(item.value);
-    setSelectedTextItemId(item.id);
+    if (item.kind === "text") {
+      setEditingFunTextId(item.id);
+      setEditingFunTextValue(item.value);
+      setSelectedTextItemId(item.id);
+    } else if (item.kind === "shape") {
+      setEditingFunTextId(item.id);
+      setEditingFunTextValue(item.label ?? "");
+    }
   };
 
   const saveEditingFunText = () => {
     if (!editingFunTextId) return;
     setFunItems((prev) =>
       prev.map((item) => {
-        if (item.id !== editingFunTextId || item.kind !== "text") return item;
-        const nextValue = editingFunTextValue;
-        const nextFontSize =
-          item.textStyle?.fontSize ?? DEFAULT_TEXT_STYLE.fontSize;
-        const nextSize = getTextItemSize(nextValue, nextFontSize);
-        return {
-          ...item,
-          value: nextValue,
-          width: nextSize.width,
-          height: nextSize.height,
-        };
+        if (item.id !== editingFunTextId) return item;
+        if (item.kind === "text") {
+          const nextValue = editingFunTextValue;
+          const nextFontSize =
+            item.textStyle?.fontSize ?? DEFAULT_TEXT_STYLE.fontSize;
+          const nextSize = getTextItemSize(nextValue, nextFontSize);
+          return {
+            ...item,
+            value: nextValue,
+            width: nextSize.width,
+            height: nextSize.height,
+          };
+        }
+        if (item.kind === "shape") {
+          return { ...item, label: editingFunTextValue };
+        }
+        return item;
       }),
     );
     setEditingFunTextId(null);
@@ -796,14 +840,80 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
     };
   }, [rotateState]);
 
+  const toggleConnectMode = () => {
+    setIsConnectMode((prev) => !prev);
+    setConnectFromItem(null);
+  };
+
+  const cancelPendingConnection = () => setConnectFromItem(null);
+
+  const handleConnectableItemClick = (kind: ConnectableKind, id: string) => {
+    if (!isConnectMode) return false;
+    if (!connectFromItem) {
+      setConnectFromItem({ kind, id });
+      return true;
+    }
+    if (connectFromItem.kind === kind && connectFromItem.id === id) {
+      setConnectFromItem(null);
+      return true;
+    }
+    const connectionId = `${idea.slug}-conn-${Date.now()}`;
+    setConnections((prev) => [
+      ...prev,
+      {
+        id: connectionId,
+        fromKind: connectFromItem.kind,
+        fromId: connectFromItem.id,
+        toKind: kind,
+        toId: id,
+        label: "",
+      },
+    ]);
+    setConnectFromItem(null);
+    return true;
+  };
+
+  const deleteConnection = useCallback(
+    (connectionId: string) => {
+      setConnections((prev) =>
+        prev.filter((connection) => connection.id !== connectionId),
+      );
+      if (selectedConnectionId === connectionId) {
+        setSelectedConnectionId(null);
+      }
+      if (editingConnectionId === connectionId) {
+        setEditingConnectionId(null);
+        setEditingConnectionLabel("");
+      }
+    },
+    [selectedConnectionId, editingConnectionId],
+  );
+
+  const startEditingConnectionLabel = (connection: Connection) => {
+    setEditingConnectionId(connection.id);
+    setEditingConnectionLabel(connection.label);
+    setSelectedConnectionId(connection.id);
+  };
+
+  const saveEditingConnectionLabel = () => {
+    if (!editingConnectionId) return;
+    setConnections((prev) =>
+      prev.map((connection) =>
+        connection.id === editingConnectionId
+          ? { ...connection, label: editingConnectionLabel.trim() }
+          : connection,
+      ),
+    );
+    setEditingConnectionId(null);
+  };
+
   useEffect(() => {
     const handleBoardKeyDown = (event: KeyboardEvent) => {
       const isDeleteKey = event.key === "Delete" || event.key === "Backspace";
       const isDuplicateShortcut =
         (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "d";
       if (!isDeleteKey && !isDuplicateShortcut) return;
-      if (!selectedCanvasItem) return;
-      if (editingNoteId || editingFunTextId) return;
+      if (editingNoteId || editingFunTextId || editingConnectionId) return;
 
       const target = event.target as HTMLElement | null;
       if (target) {
@@ -816,6 +926,14 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
           return;
         }
       }
+
+      if (isDeleteKey && selectedConnectionId) {
+        event.preventDefault();
+        deleteConnection(selectedConnectionId);
+        return;
+      }
+
+      if (!selectedCanvasItem) return;
 
       event.preventDefault();
       if (isDuplicateShortcut) {
@@ -842,8 +960,11 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
     selectedCanvasItem,
     editingNoteId,
     editingFunTextId,
+    editingConnectionId,
+    selectedConnectionId,
     deleteFunItem,
     deleteStickyNote,
+    deleteConnection,
     duplicateStickyNote,
     duplicateFunItem,
   ]);
@@ -969,5 +1090,19 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
     updateSelectedTextStyle,
     updateSelectedShapeStyle,
     onNoteToolDragStart,
+    connections,
+    isConnectMode,
+    connectFromItem,
+    selectedConnectionId,
+    setSelectedConnectionId,
+    editingConnectionId,
+    editingConnectionLabel,
+    setEditingConnectionLabel,
+    toggleConnectMode,
+    cancelPendingConnection,
+    handleConnectableItemClick,
+    deleteConnection,
+    startEditingConnectionLabel,
+    saveEditingConnectionLabel,
   };
 }

@@ -90,6 +90,7 @@ export type FunItem =
       height: number;
       rotation?: number;
       shapeStyle?: ShapeItemStyle;
+      label?: string;
     };
 
 export type DragPayload =
@@ -98,9 +99,21 @@ export type DragPayload =
   | { kind: "tool"; toolKind: "emoji" | "text" | "shape"; value: string }
   | { kind: "noteTool"; color: string };
 
+export type ConnectableKind = "note" | "fun";
+
+export type Connection = {
+  id: string;
+  fromKind: ConnectableKind;
+  fromId: string;
+  toKind: ConnectableKind;
+  toId: string;
+  label: string;
+};
+
 export type IdeaBoardState = {
   notes: StickyNote[];
   funItems: FunItem[];
+  connections: Connection[];
   pinnedNoteIds: string[];
   summaryPreview: string;
   postedDecisionId: string | null;
