@@ -1,10 +1,19 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpStatus,
+  ParseFilePipeBuilder,
+  Post,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 import { AiService } from './ai.service';
 
 import { GenerateSummaryDto } from './dto/generate-summary.dto';
 import { GenerateLinkedInPostDto } from './dto/generate-linkedin-post.dto';
-import { CleanupBoardLayoutDto } from './dto/cleanup-board-layout.dto';
 
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth-guard';
 import { RolesGuard } from '@/auth/guards/roles.guard';
@@ -28,9 +37,40 @@ export class AiController {
     return this.aiService.generateLinkedInCaption(dto.ideaId);
   }
 
-  @Post('board-layout')
+  @Post('board-image')
   @UseGuards(JwtAuthGuard)
-  cleanupBoardLayout(@Body() dto: CleanupBoardLayoutDto) {
-    return this.aiService.cleanupBoardLayout(dto);
+  @UseInterceptors(
+    FileInterceptor('image', {
+      limits: {
+        fileSize: 20 * 1024 * 1024,
+      },
+    }),
+  )
+  generateBoardImage(
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: /(png|jpe?g)$/i,
+        })
+        .addMaxSizeValidator({
+          maxSize: 20 * 1024 * 1024,
+        })
+        .build({
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        }),
+    )
+    image: Express.Multer.File,
+    @Body('texts') textsJson?: string,
+  ) {
+    let texts: string[] = [];
+    try {
+      const parsed = textsJson ? JSON.parse(textsJson) : [];
+      if (Array.isArray(parsed)) {
+        texts = parsed.filter((text): text is string => typeof text === 'string');
+      }
+    } catch {
+      // Ignore malformed texts payload — the image alone still works.
+    }
+    return this.aiService.generateBoardImage(image, texts);
   }
 }

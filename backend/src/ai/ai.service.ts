@@ -4,17 +4,9 @@ import {
   NotFoundException,
   Logger,
 } from '@nestjs/common';
-import OpenAI from 'openai';
+import OpenAI, { toFile } from 'openai';
 
 import { PrismaService } from '@/prisma/prisma.service';
-import { CleanupBoardLayoutDto } from './dto/cleanup-board-layout.dto';
-
-type LayoutConnection = {
-  id: string;
-  fromId: string;
-  toId: string;
-  label?: string;
-};
 
 @Injectable()
 export class AiService {
@@ -291,74 +283,72 @@ Write a LinkedIn post about this.
   }
 
   /**
-   * Export-only: rewrites connection descriptions to be clearer for the PDF
-   * export. Box layout is computed deterministically on the client (LLMs are
-   * unreliable at precise 2D coordinates/collision-avoidance) — this only
-   * touches text. Never persisted — the live idea board is untouched.
+   * Export-only: sends a screenshot of the idea board to an image-generation
+   * model and asks it to redraw it as a clean, polished diagram. Never
+   * persisted — the live idea board is untouched.
    */
-  async cleanupBoardLayout(dto: CleanupBoardLayoutDto) {
-    const connections = dto.connections as LayoutConnection[];
-    const labeled = connections.filter((connection) => connection.label?.trim());
-
-    if (labeled.length === 0) {
-      return { connections: [] };
-    }
-
-    const completion = await this.openai.chat.completions.create({
-      model: 'gpt-4.1-mini',
-      temperature: 0.3,
-      response_format: { type: 'json_object' },
-      messages: [
-        {
-          role: 'system',
-          content: `
-You improve the wording of connection descriptions on a system/process
-diagram for a polished PDF export. For each connection, rewrite its label
-to be a clearer, more concise description of that relationship — same
-meaning, better wording, ideally under 5 words. Do not invent new
-information.
-Respond with ONLY a JSON object of the exact shape:
-{"connections": [{"id": "<id>", "label": "<string>"}, ...]}
-Include every id from the input exactly once. No prose, no markdown.
-`,
-        },
-        {
-          role: 'user',
-          content: JSON.stringify({
-            connections: labeled.map((connection) => ({
-              id: connection.id,
-              label: connection.label?.slice(0, 200) ?? '',
-            })),
-          }),
-        },
-      ],
-    });
-
-    const raw = completion.choices[0].message.content ?? '{}';
-
-    type ConnectionResult = { id: string; label: string };
-    let parsedConnections: ConnectionResult[] = [];
-    try {
-      const parsed = JSON.parse(raw) as { connections?: unknown };
-      if (Array.isArray(parsed.connections)) {
-        parsedConnections = parsed.connections as ConnectionResult[];
-      }
-    } catch {
-      throw new BadRequestException('AI returned invalid connection labels.');
-    }
-
-    const labelById = new Map(
-      parsedConnections
-        .filter((entry) => typeof entry?.id === 'string' && typeof entry?.label === 'string')
-        .map((entry) => [entry.id, entry.label]),
+  async generateBoardImage(file: Express.Multer.File, texts: string[] = []) {
+    this.logger.log(
+      `[AI BOARD IMAGE] Request received: ${file.originalname}, ${file.mimetype}, ${file.size} bytes, ${texts.length} ground-truth texts`,
     );
+    const startedAt = Date.now();
 
-    const resultConnections = labeled.map((connection) => ({
-      id: connection.id,
-      label: labelById.get(connection.id) ?? connection.label ?? '',
-    }));
+    const groundTruthBlock = texts.length
+      ? `
+The image contains the following exact text strings. Reproduce each one
+character-for-character, with correct spelling, exactly as listed here —
+do not rely only on reading the pixels, copy these strings verbatim into
+the matching box or connection label:
+${texts.map((text, index) => `${index + 1}. "${text}"`).join('\n')}
+`
+      : '';
 
-    return { connections: resultConnections };
+    let result: Awaited<ReturnType<typeof this.openai.images.edit>>;
+    try {
+      result = await this.openai.images.edit(
+        {
+          model: 'gpt-image-1',
+          image: await toFile(file.buffer, file.originalname, {
+            type: file.mimetype,
+          }),
+          quality: 'high',
+          prompt: `
+Redesign this system/process diagram to look like a clean, professional
+architecture diagram. Keep every box and every connection, and keep every
+piece of text (box labels, connection descriptions) exactly as written —
+do not translate, remove, shorten, or invent any text. Improve the visual
+layout: even spacing, clean alignment, consistent rounded-rectangle boxes,
+clear arrows, and readable, well-sized typography. Use a light, neutral
+background and a professional color palette.
+${groundTruthBlock}`,
+        },
+        { timeout: 120_000 },
+      );
+      this.logger.log(
+        `[AI BOARD IMAGE] OpenAI responded in ${Date.now() - startedAt}ms`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `[AI BOARD IMAGE] OpenAI request failed after ${Date.now() - startedAt}ms: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw new BadRequestException(
+        error instanceof Error
+          ? `AI image generation failed: ${error.message}`
+          : 'AI image generation failed.',
+      );
+    }
+
+    const image = result.data?.[0]?.b64_json;
+    if (!image) {
+      this.logger.error(
+        `[AI BOARD IMAGE] No b64_json in response: ${JSON.stringify(result).slice(0, 1000)}`,
+      );
+      throw new BadRequestException(
+        'AI could not generate an improved diagram image.',
+      );
+    }
+
+    return { image: `data:image/png;base64,${image}` };
   }
 }
 

@@ -26,7 +26,6 @@ import {
 } from "@/app/__components/idea-board/canvas/utils";
 import { clamp, readDragPayload } from "@/app/__components/idea-board/utils";
 import { requestPlannedGuide } from "@/app/__components/idea-board/summaryApi";
-import { requestConnectionLabelImprovements } from "@/app/__components/idea-board/layoutApi";
 import type {
   Connection,
   ConnectableKind,
@@ -507,22 +506,6 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
     } finally {
       setIsGeneratingGuide(false);
     }
-  };
-
-  /**
-   * Export-only: asks AI to reword connection descriptions for the PDF
-   * export. Read-only — never mutates the live board.
-   */
-  const improveConnectionLabelsForExport = async () => {
-    const token = getAccessToken();
-    if (!token) {
-      throw new Error("Please log in first.");
-    }
-
-    return requestConnectionLabelImprovements(
-      connections.map((connection) => ({ id: connection.id, label: connection.label })),
-      token,
-    );
   };
 
   const deleteStickyNote = useCallback(
@@ -1094,7 +1077,6 @@ export function useIdeaBoardCanvas(idea: DiscoverIdea) {
     togglePinnedNote,
     togglePinMode,
     generateSummaryPreview,
-    improveConnectionLabelsForExport,
     isGeneratingGuide,
     duplicateStickyNote,
     duplicateFunItem,

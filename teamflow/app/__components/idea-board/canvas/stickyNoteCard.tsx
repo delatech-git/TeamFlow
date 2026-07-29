@@ -72,7 +72,7 @@ export default function StickyNoteCard({
           value={editingText}
           onChange={(event) => onEditingTextChange(event.target.value)}
           onBlur={onSaveEditing}
-          className="min-h-[72px] w-full resize-none rounded-md border border-black/15 bg-white/75 p-2 text-sm leading-5 text-[#2c213f] outline-none"
+          className="min-h-18 w-full resize-none rounded-md border border-black/15 bg-white/75 p-2 text-sm leading-5 text-[#2c213f] outline-none"
           placeholder="Write your suggestion..."
         />
       ) : (

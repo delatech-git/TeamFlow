@@ -93,7 +93,7 @@ export default function FunCanvasItem({
           ) : item.label ? (
             <span
               style={{ color: shapeStyle.textColor }}
-              className="pointer-events-none absolute inset-0 flex items-center justify-center break-words px-2 text-center text-sm font-medium"
+              className="pointer-events-none absolute inset-0 flex items-center justify-center wrap-break-word px-2 text-center text-sm font-medium"
             >
               {item.label}
             </span>
@@ -115,7 +115,7 @@ export default function FunCanvasItem({
       ) : (
         <span
           aria-label={`${item.kind} item`}
-          className={item.kind === "text" ? "w-full break-words whitespace-pre-wrap px-1 text-center font-medium leading-tight" : "leading-none"}
+          className={item.kind === "text" ? "w-full wrap-break-word whitespace-pre-wrap px-1 text-center font-medium leading-tight" : "leading-none"}
         >
           {item.value}
         </span>
