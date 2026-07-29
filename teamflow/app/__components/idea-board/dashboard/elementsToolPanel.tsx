@@ -184,6 +184,15 @@ export function ElementsToolPanel({
               </span>
             </div>
           </label>
+          <label className="flex items-center justify-between text-xs">
+            <span className="tf-board-control-label-text">Text color</span>
+            <input
+              type="color"
+              value={normalizeColor(activeShapeStyle.textColor)}
+              onChange={(event) => onChangeShapeStyle({ textColor: event.target.value })}
+              className="tf-board-control-color"
+            />
+          </label>
         </div>
       ) : null}
 

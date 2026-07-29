@@ -55,6 +55,7 @@ export type ShapeItemStyle = {
   borderColor: string;
   background: string;
   backgroundOpacity: number;
+  textColor: string;
 };
 
 export type FunItem =

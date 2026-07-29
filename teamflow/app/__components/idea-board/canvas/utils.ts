@@ -37,6 +37,7 @@ export const DEFAULT_SHAPE_STYLE: ShapeItemStyle = {
   borderColor: "#000000",
   background: "#ffffff",
   backgroundOpacity: 1,
+  textColor: "#000000",
 };
 
 export function getTextItemSize(text: string, fontSize: number) {

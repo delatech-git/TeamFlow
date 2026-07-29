@@ -87,10 +87,14 @@ export default function FunCanvasItem({
               value={editingTextValue}
               onChange={(event) => onEditingTextChange(event.target.value)}
               onBlur={onSaveEditing}
-              className="absolute inset-0 h-full w-full resize-none border-0 bg-transparent px-2 text-center text-sm text-black caret-current outline-none"
+              style={{ color: shapeStyle.textColor }}
+              className="absolute inset-0 h-full w-full resize-none border-0 bg-transparent px-2 text-center text-sm caret-current outline-none"
             />
           ) : item.label ? (
-            <span className="pointer-events-none absolute inset-0 flex items-center justify-center break-words px-2 text-center text-sm font-medium text-black">
+            <span
+              style={{ color: shapeStyle.textColor }}
+              className="pointer-events-none absolute inset-0 flex items-center justify-center break-words px-2 text-center text-sm font-medium"
+            >
               {item.label}
             </span>
           ) : null}
