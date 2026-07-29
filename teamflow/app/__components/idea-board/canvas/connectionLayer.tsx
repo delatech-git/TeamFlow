@@ -1,6 +1,7 @@
 "use client";
 
 import type { Connection, ConnectableKind } from "@/src/entities/models/idea-board";
+import { getOrthogonalRoute, pointsToPath } from "@/app/__components/idea-board/canvas/connectionRouting";
 
 type ConnectableItem = {
   kind: ConnectableKind;
@@ -10,51 +11,6 @@ type ConnectableItem = {
   width: number;
   height: number;
 };
-
-type Point = { x: number; y: number };
-
-/** Routes a connector as a single right-angle bend (or a straight line when the boxes are already aligned). */
-function getOrthogonalRoute(from: ConnectableItem, to: ConnectableItem) {
-  const fromCenter = { x: from.x + from.width / 2, y: from.y + from.height / 2 };
-  const toCenter = { x: to.x + to.width / 2, y: to.y + to.height / 2 };
-  const dx = toCenter.x - fromCenter.x;
-  const dy = toCenter.y - fromCenter.y;
-  const isHorizontalPrimary = Math.abs(dx) >= Math.abs(dy);
-
-  let start: Point;
-  let end: Point;
-  if (isHorizontalPrimary) {
-    start = { x: dx >= 0 ? from.x + from.width : from.x, y: fromCenter.y };
-    end = { x: dx >= 0 ? to.x : to.x + to.width, y: toCenter.y };
-  } else {
-    start = { x: fromCenter.x, y: dy >= 0 ? from.y + from.height : from.y };
-    end = { x: toCenter.x, y: dy >= 0 ? to.y : to.y + to.height };
-  }
-
-  const isAligned = isHorizontalPrimary ? start.y === end.y : start.x === end.x;
-  if (isAligned) {
-    return { points: [start, end], labelPoint: { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 } };
-  }
-
-  const bend: Point = isHorizontalPrimary
-    ? { x: (start.x + end.x) / 2, y: start.y }
-    : { x: start.x, y: (start.y + end.y) / 2 };
-  const bendEnd: Point = isHorizontalPrimary
-    ? { x: bend.x, y: end.y }
-    : { x: end.x, y: bend.y };
-
-  return {
-    points: [start, bend, bendEnd, end],
-    labelPoint: {
-      x: (bend.x + bendEnd.x) / 2,
-      y: (bend.y + bendEnd.y) / 2,
-    },
-  };
-}
-
-function pointsToPath(points: Point[]) {
-  return points.map((point, index) => `${index === 0 ? "M" : "L"}${point.x},${point.y}`).join(" ");
-}
 
 export type ConnectionLayerProps = {
   connections: Connection[];
@@ -103,7 +59,8 @@ export default function ConnectionLayer({
         const to = itemByKey.get(`${connection.toKind}:${connection.toId}`);
         if (!from || !to) return null;
 
-        const { points, labelPoint } = getOrthogonalRoute(from, to);
+        const obstacles = items.filter((item) => item !== from && item !== to);
+        const { points, labelPoint } = getOrthogonalRoute(from, to, obstacles);
         const path = pointsToPath(points);
         const midX = labelPoint.x;
         const midY = labelPoint.y;

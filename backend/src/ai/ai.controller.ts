@@ -4,6 +4,7 @@ import { AiService } from './ai.service';
 
 import { GenerateSummaryDto } from './dto/generate-summary.dto';
 import { GenerateLinkedInPostDto } from './dto/generate-linkedin-post.dto';
+import { CleanupBoardLayoutDto } from './dto/cleanup-board-layout.dto';
 
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth-guard';
 import { RolesGuard } from '@/auth/guards/roles.guard';
@@ -25,5 +26,11 @@ export class AiController {
   @UseGuards(JwtAuthGuard)
   generateLinkedInPost(@Body() dto: GenerateLinkedInPostDto) {
     return this.aiService.generateLinkedInCaption(dto.ideaId);
+  }
+
+  @Post('board-layout')
+  @UseGuards(JwtAuthGuard)
+  cleanupBoardLayout(@Body() dto: CleanupBoardLayoutDto) {
+    return this.aiService.cleanupBoardLayout(dto);
   }
 }

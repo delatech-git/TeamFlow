@@ -7,6 +7,14 @@ import {
 import OpenAI from 'openai';
 
 import { PrismaService } from '@/prisma/prisma.service';
+import { CleanupBoardLayoutDto } from './dto/cleanup-board-layout.dto';
+
+type LayoutConnection = {
+  id: string;
+  fromId: string;
+  toId: string;
+  label?: string;
+};
 
 @Injectable()
 export class AiService {
@@ -280,6 +288,77 @@ Write a LinkedIn post about this.
     }
 
     return { caption };
+  }
+
+  /**
+   * Export-only: rewrites connection descriptions to be clearer for the PDF
+   * export. Box layout is computed deterministically on the client (LLMs are
+   * unreliable at precise 2D coordinates/collision-avoidance) — this only
+   * touches text. Never persisted — the live idea board is untouched.
+   */
+  async cleanupBoardLayout(dto: CleanupBoardLayoutDto) {
+    const connections = dto.connections as LayoutConnection[];
+    const labeled = connections.filter((connection) => connection.label?.trim());
+
+    if (labeled.length === 0) {
+      return { connections: [] };
+    }
+
+    const completion = await this.openai.chat.completions.create({
+      model: 'gpt-4.1-mini',
+      temperature: 0.3,
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content: `
+You improve the wording of connection descriptions on a system/process
+diagram for a polished PDF export. For each connection, rewrite its label
+to be a clearer, more concise description of that relationship — same
+meaning, better wording, ideally under 5 words. Do not invent new
+information.
+Respond with ONLY a JSON object of the exact shape:
+{"connections": [{"id": "<id>", "label": "<string>"}, ...]}
+Include every id from the input exactly once. No prose, no markdown.
+`,
+        },
+        {
+          role: 'user',
+          content: JSON.stringify({
+            connections: labeled.map((connection) => ({
+              id: connection.id,
+              label: connection.label?.slice(0, 200) ?? '',
+            })),
+          }),
+        },
+      ],
+    });
+
+    const raw = completion.choices[0].message.content ?? '{}';
+
+    type ConnectionResult = { id: string; label: string };
+    let parsedConnections: ConnectionResult[] = [];
+    try {
+      const parsed = JSON.parse(raw) as { connections?: unknown };
+      if (Array.isArray(parsed.connections)) {
+        parsedConnections = parsed.connections as ConnectionResult[];
+      }
+    } catch {
+      throw new BadRequestException('AI returned invalid connection labels.');
+    }
+
+    const labelById = new Map(
+      parsedConnections
+        .filter((entry) => typeof entry?.id === 'string' && typeof entry?.label === 'string')
+        .map((entry) => [entry.id, entry.label]),
+    );
+
+    const resultConnections = labeled.map((connection) => ({
+      id: connection.id,
+      label: labelById.get(connection.id) ?? connection.label ?? '',
+    }));
+
+    return { connections: resultConnections };
   }
 }
 

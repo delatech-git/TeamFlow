@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Download, Sparkles } from "lucide-react";
 import FunDashboard from "@/app/__components/idea-board/funDashboard";
@@ -17,6 +17,7 @@ import {
   DEFAULT_TEXT_STYLE,
 } from "@/app/__components/idea-board/canvas/utils";
 import { useIdeaBoardCanvas } from "@/app/__components/idea-board/useIdeaBoardCanvas";
+import { exportBoardAsPdf } from "@/app/__components/idea-board/exportBoardPdf";
 
 export default function IdeaBoard({ idea }: IdeaBoardProps) {
   const {
@@ -76,45 +77,36 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
     handleConnectableItemClick,
     startEditingConnectionLabel,
     saveEditingConnectionLabel,
+    improveConnectionLabelsForExport,
   } = useIdeaBoardCanvas(idea);
 
-  const boardContentRef = useRef<HTMLDivElement>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   const handleExportPdf = async () => {
-    const contentEl = boardContentRef.current;
-    if (!contentEl || isExportingPdf) return;
+    if (isExportingPdf) return;
     setIsExportingPdf(true);
     try {
-      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
-        import("html2canvas-pro"),
-        import("jspdf"),
-      ]);
-      const canvas = await html2canvas(contentEl, {
-        backgroundColor: "#ffffff",
-        scale: 2,
-        width: CANVAS_WIDTH,
-        height: CANVAS_HEIGHT,
-        onclone: (_doc, clonedEl) => {
-          clonedEl.style.transform = "none";
-        },
+      let improvedLabels;
+      try {
+        improvedLabels = await improveConnectionLabelsForExport();
+      } catch (error) {
+        console.error("AI label rewrite failed, exporting with the original descriptions instead", error);
+        improvedLabels = { connections: [] };
+      }
+
+      await exportBoardAsPdf({
+        notes,
+        funItems,
+        connections,
+        improvedLabels,
+        fileName: `${idea.slug}-idea-board.pdf`,
       });
-      const pdf = new jsPDF({
-        orientation: "landscape",
-        unit: "px",
-        format: [canvas.width, canvas.height],
-      });
-      pdf.addImage(
-        canvas.toDataURL("image/png"),
-        "PNG",
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-      );
-      pdf.save(`${idea.slug}-idea-board.pdf`);
     } catch (error) {
-      console.error("Failed to export idea board as PDF", error);
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : "Could not export the idea board as PDF.",
+      );
     } finally {
       setIsExportingPdf(false);
     }
@@ -214,7 +206,7 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
                 className="inline-flex items-center gap-1.5 rounded-full border border-slate-950/60 bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-50"
               >
                 <Download size={12} aria-hidden />
-                {isExportingPdf ? "Exporting..." : "Export as PDF"}
+                {isExportingPdf ? "Generating AI-improved PDF..." : "Export as PDF"}
               </button>
             </div>
 
@@ -226,7 +218,6 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
               }}
             >
               <div
-                ref={boardContentRef}
                 className="relative"
                 style={{
                   width: CANVAS_WIDTH,
