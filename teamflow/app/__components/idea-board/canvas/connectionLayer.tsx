@@ -108,21 +108,29 @@ export default function ConnectionLayer({
                 />
               </foreignObject>
             ) : connection.label ? (
-              <foreignObject x={midX - 70} y={midY - 12} width={140} height={24} className="pointer-events-auto">
-                <div
-                  className="cursor-pointer truncate rounded bg-slate-900/80 px-1.5 py-0.5 text-center text-[11px] text-white/90"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onSelectConnection(connection.id);
-                  }}
-                  onDoubleClick={(event) => {
-                    event.stopPropagation();
-                    onDoubleClickConnection(connection);
-                  }}
+              <g
+                className="pointer-events-auto cursor-pointer"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onSelectConnection(connection.id);
+                }}
+                onDoubleClick={(event) => {
+                  event.stopPropagation();
+                  onDoubleClickConnection(connection);
+                }}
+              >
+                <rect x={midX - 70} y={midY - 12} width={140} height={24} rx={4} fill="#0f172a" />
+                <text
+                  x={midX}
+                  y={midY}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill="#ffffff"
+                  fontSize={11}
                 >
                   {connection.label}
-                </div>
-              </foreignObject>
+                </text>
+              </g>
             ) : null}
           </g>
         );
