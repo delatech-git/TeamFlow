@@ -4,7 +4,7 @@ import {
   NotFoundException,
   Logger,
 } from '@nestjs/common';
-import OpenAI, { toFile } from 'openai';
+import OpenAI from 'openai';
 
 import { PrismaService } from '@/prisma/prisma.service';
 
@@ -280,75 +280,6 @@ Write a LinkedIn post about this.
     }
 
     return { caption };
-  }
-
-  /**
-   * Export-only: sends a screenshot of the idea board to an image-generation
-   * model and asks it to redraw it as a clean, polished diagram. Never
-   * persisted — the live idea board is untouched.
-   */
-  async generateBoardImage(file: Express.Multer.File, texts: string[] = []) {
-    this.logger.log(
-      `[AI BOARD IMAGE] Request received: ${file.originalname}, ${file.mimetype}, ${file.size} bytes, ${texts.length} ground-truth texts`,
-    );
-    const startedAt = Date.now();
-
-    const groundTruthBlock = texts.length
-      ? `
-The image contains the following exact text strings. Reproduce each one
-character-for-character, with correct spelling, exactly as listed here —
-do not rely only on reading the pixels, copy these strings verbatim into
-the matching box or connection label:
-${texts.map((text, index) => `${index + 1}. "${text}"`).join('\n')}
-`
-      : '';
-
-    let result: Awaited<ReturnType<typeof this.openai.images.edit>>;
-    try {
-      result = await this.openai.images.edit(
-        {
-          model: 'gpt-image-1',
-          image: await toFile(file.buffer, file.originalname, {
-            type: file.mimetype,
-          }),
-          quality: 'high',
-          prompt: `
-Redesign this system/process diagram to look like a clean, professional
-architecture diagram. Keep every box and every connection, and keep every
-piece of text (box labels, connection descriptions) exactly as written —
-do not translate, remove, shorten, or invent any text. Improve the visual
-layout: even spacing, clean alignment, consistent rounded-rectangle boxes,
-clear arrows, and readable, well-sized typography. Use a light, neutral
-background and a professional color palette.
-${groundTruthBlock}`,
-        },
-        { timeout: 120_000 },
-      );
-      this.logger.log(
-        `[AI BOARD IMAGE] OpenAI responded in ${Date.now() - startedAt}ms`,
-      );
-    } catch (error) {
-      this.logger.error(
-        `[AI BOARD IMAGE] OpenAI request failed after ${Date.now() - startedAt}ms: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      throw new BadRequestException(
-        error instanceof Error
-          ? `AI image generation failed: ${error.message}`
-          : 'AI image generation failed.',
-      );
-    }
-
-    const image = result.data?.[0]?.b64_json;
-    if (!image) {
-      this.logger.error(
-        `[AI BOARD IMAGE] No b64_json in response: ${JSON.stringify(result).slice(0, 1000)}`,
-      );
-      throw new BadRequestException(
-        'AI could not generate an improved diagram image.',
-      );
-    }
-
-    return { image: `data:image/png;base64,${image}` };
   }
 }
 

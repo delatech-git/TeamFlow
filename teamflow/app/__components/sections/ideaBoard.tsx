@@ -17,8 +17,6 @@ import {
   DEFAULT_TEXT_STYLE,
 } from "@/app/__components/idea-board/canvas/utils";
 import { useIdeaBoardCanvas } from "@/app/__components/idea-board/useIdeaBoardCanvas";
-import { requestBoardImage } from "@/app/__components/idea-board/boardImageApi";
-import { getAccessToken } from "@/src/infrastructure/auth/session";
 
 export default function IdeaBoard({ idea }: IdeaBoardProps) {
   const {
@@ -83,45 +81,19 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
   const boardContentRef = useRef<HTMLDivElement>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
 
-  const loadImage = (src: string) =>
-    new Promise<HTMLImageElement>((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("Could not load the generated image."));
-      img.src = src;
-    });
+  const EXPORT_PADDING = 40;
 
-  const MAX_AI_UPLOAD_WIDTH = 2000;
-
-  /** Downscaled JPEG copy for the AI upload — smaller/faster than the full-res PNG, while keeping enough resolution for the model to read text clearly. */
-  const toAiUploadBlob = (canvas: HTMLCanvasElement) =>
-    new Promise<Blob | null>((resolve) => {
-      const scale = Math.min(1, MAX_AI_UPLOAD_WIDTH / canvas.width);
-      const scaledCanvas = document.createElement("canvas");
-      scaledCanvas.width = Math.round(canvas.width * scale);
-      scaledCanvas.height = Math.round(canvas.height * scale);
-      const ctx = scaledCanvas.getContext("2d");
-      if (!ctx) {
-        resolve(null);
-        return;
-      }
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, scaledCanvas.width, scaledCanvas.height);
-      ctx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
-      scaledCanvas.toBlob(resolve, "image/jpeg", 0.92);
-    });
-
-  const collectBoardTexts = () => {
-    const funItemLabel = (item: (typeof funItems)[number]) => {
-      if (item.kind === "shape") return item.label ?? "";
-      if (item.kind === "text") return item.value;
-      return "";
-    };
-    return [
-      ...notes.map((note) => note.text),
-      ...funItems.map(funItemLabel),
-      ...connections.map((connection) => connection.label),
-    ].filter((text): text is string => Boolean(text && text.trim()));
+  /** Bounding box of the actual notes/items, so the export isn't padded out to the whole (mostly empty) canvas. */
+  const getContentBounds = () => {
+    const rects = [...notes, ...funItems];
+    if (rects.length === 0) {
+      return { x: 0, y: 0, width: CANVAS_WIDTH, height: CANVAS_HEIGHT };
+    }
+    const minX = Math.max(0, Math.min(...rects.map((r) => r.x)) - EXPORT_PADDING);
+    const minY = Math.max(0, Math.min(...rects.map((r) => r.y)) - EXPORT_PADDING);
+    const maxX = Math.min(CANVAS_WIDTH, Math.max(...rects.map((r) => r.x + r.width)) + EXPORT_PADDING);
+    const maxY = Math.min(CANVAS_HEIGHT, Math.max(...rects.map((r) => r.y + r.height)) + EXPORT_PADDING);
+    return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
   };
 
   const handleExportPdf = async () => {
@@ -133,41 +105,25 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
         import("html2canvas-pro"),
         import("jspdf"),
       ]);
+      const bounds = getContentBounds();
       const canvas = await html2canvas(contentEl, {
         backgroundColor: "#ffffff",
         scale: 2,
-        width: CANVAS_WIDTH,
-        height: CANVAS_HEIGHT,
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.width,
+        height: bounds.height,
         onclone: (_doc, clonedEl) => {
           clonedEl.style.transform = "none";
         },
       });
 
-      let imageSrc = canvas.toDataURL("image/png");
-      let imageWidth = canvas.width;
-      let imageHeight = canvas.height;
-
-      try {
-        const token = getAccessToken();
-        if (!token) throw new Error("Please log in first.");
-        const screenshotBlob = await toAiUploadBlob(canvas);
-        if (!screenshotBlob) throw new Error("Could not capture the board.");
-
-        const { image } = await requestBoardImage(screenshotBlob, collectBoardTexts(), token);
-        const generatedImage = await loadImage(image);
-        imageSrc = image;
-        imageWidth = generatedImage.naturalWidth;
-        imageHeight = generatedImage.naturalHeight;
-      } catch (error) {
-        console.error("AI image generation failed, exporting the plain screenshot instead", error);
-      }
-
       const pdf = new jsPDF({
-        orientation: imageWidth >= imageHeight ? "landscape" : "portrait",
+        orientation: canvas.width >= canvas.height ? "landscape" : "portrait",
         unit: "px",
-        format: [imageWidth, imageHeight],
+        format: [canvas.width, canvas.height],
       });
-      pdf.addImage(imageSrc, "PNG", 0, 0, imageWidth, imageHeight);
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, canvas.width, canvas.height);
       pdf.save(`${idea.slug}-idea-board.pdf`);
     } catch (error) {
       console.error("Failed to export idea board as PDF", error);
@@ -270,7 +226,7 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
                 className="inline-flex items-center gap-1.5 rounded-full border border-slate-950/60 bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-50"
               >
                 <Download size={12} aria-hidden />
-                {isExportingPdf ? "Generating AI diagram..." : "Export as PDF"}
+                {isExportingPdf ? "Exporting..." : "Export as PDF"}
               </button>
             </div>
 
