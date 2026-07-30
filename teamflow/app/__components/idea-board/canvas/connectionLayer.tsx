@@ -12,6 +12,19 @@ type ConnectableItem = {
   height: number;
 };
 
+const LABEL_FONT_SIZE = 11;
+const LABEL_PADDING_X = 10;
+const LABEL_MIN_WIDTH = 60;
+
+function measureLabelWidth(text: string) {
+  if (typeof document === "undefined") return LABEL_MIN_WIDTH;
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return LABEL_MIN_WIDTH;
+  ctx.font = `${LABEL_FONT_SIZE}px Arial, sans-serif`;
+  return Math.max(LABEL_MIN_WIDTH, Math.ceil(ctx.measureText(text).width) + LABEL_PADDING_X * 2);
+}
+
 export type ConnectionLayerProps = {
   connections: Connection[];
   items: ConnectableItem[];
@@ -64,6 +77,7 @@ export default function ConnectionLayer({
         const path = pointsToPath(points);
         const midX = labelPoint.x;
         const midY = labelPoint.y;
+        const labelWidth = connection.label ? measureLabelWidth(connection.label) : 0;
         const isSelected = selectedConnectionId === connection.id;
         const isEditing = editingConnectionId === connection.id;
 
@@ -119,14 +133,21 @@ export default function ConnectionLayer({
                   onDoubleClickConnection(connection);
                 }}
               >
-                <rect x={midX - 70} y={midY - 12} width={140} height={24} rx={4} fill="#0f172a" />
+                <rect
+                  x={midX - labelWidth / 2}
+                  y={midY - 12}
+                  width={labelWidth}
+                  height={24}
+                  rx={4}
+                  fill="#0f172a"
+                />
                 <text
                   x={midX}
                   y={midY}
                   textAnchor="middle"
                   dominantBaseline="middle"
                   fill="#ffffff"
-                  fontSize={11}
+                  fontSize={LABEL_FONT_SIZE}
                 >
                   {connection.label}
                 </text>
