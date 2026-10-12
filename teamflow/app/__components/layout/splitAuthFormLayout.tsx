@@ -25,9 +25,9 @@ export function SplitAuthFormLayout({
   wideForm,
 }: SplitAuthFormLayoutProps) {
   return (
-    <section className="min-h-[calc(100dvh-5rem)] bg-neutral-950 pt-20 text-white">
-      <div className="grid min-h-inherit lg:grid-cols-2">
-        <div className="relative min-h-[42vh] bg-black lg:min-h-inherit">
+    <section className="flex min-h-dvh flex-col bg-neutral-950 pt-20 text-white">
+      <div className="grid flex-1 lg:grid-cols-2">
+        <div className="relative min-h-[42vh] bg-black">
           <Image
             src={image}
             alt={imageAlt}
