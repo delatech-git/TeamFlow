@@ -175,7 +175,7 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
       <section className="relative left-1/2 right-1/2 mx-[-50vw] w-screen px-4 sm:px-6 lg:px-8">
         <div className="grid items-start gap-3 lg:grid-cols-[184px_minmax(0,1fr)] lg:pr-80">
           <aside
-            className="tf-board-sidepanel tf-animate-in rounded-2xl bg-transparent p-2.5"
+            className="tf-board-sidepanel tf-animate-in rounded-2xl border border-slate-200 bg-slate-100 p-2.5 lg:self-stretch"
             style={{ animationDelay: "60ms" }}
           >
             <NotebookPad onNoteToolDragStart={onNoteToolDragStart} />
