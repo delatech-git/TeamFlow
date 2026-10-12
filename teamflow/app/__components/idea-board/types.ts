@@ -51,8 +51,10 @@ export type FunDashboardProps = {
   onChangeTextStyle: (patch: Partial<TextItemStyle>) => void;
   onChangeShapeStyle: (patch: Partial<ShapeItemStyle>) => void;
   onToggleConnectMode: () => void;
+  onCollapse: () => void;
 };
 
 export type NotebookPadProps = {
   onNoteToolDragStart: (payload: string) => (event: DragEvent<HTMLDivElement>) => void;
+  onCollapse: () => void;
 };

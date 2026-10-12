@@ -1,6 +1,6 @@
 "use client";
 
-import { Waypoints } from "lucide-react";
+import { PanelRightClose, Waypoints } from "lucide-react";
 import type { FunDashboardProps } from "@/app/__components/idea-board/types";
 import { EmojiToolPanel } from "@/app/__components/idea-board/dashboard/emojiToolPanel";
 import { ElementsToolPanel } from "@/app/__components/idea-board/dashboard/elementsToolPanel";
@@ -25,6 +25,7 @@ export default function FunDashboard({
   onChangeTextStyle,
   onChangeShapeStyle,
   onToggleConnectMode,
+  onCollapse,
 }: FunDashboardProps) {
   return (
     <aside
@@ -32,7 +33,18 @@ export default function FunDashboard({
       style={{ animationDelay: "90ms" }}
     >
       <div className="space-y-2">
-        <p className="tf-board-tools-badge">Board Tools</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="tf-board-tools-badge">Board Tools</p>
+          <button
+            type="button"
+            onClick={onCollapse}
+            className="rounded-md p-1 text-slate-500 transition hover:bg-slate-200/70 hover:text-slate-800"
+            aria-label="Hide board tools"
+            title="Hide board tools"
+          >
+            <PanelRightClose size={16} aria-hidden />
+          </button>
+        </div>
         <p className="tf-board-tools-hint">
           Pick a tool, then click anywhere on the board to place it.
         </p>

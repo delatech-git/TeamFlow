@@ -2,7 +2,13 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Download, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  PanelLeftOpen,
+  PanelRightOpen,
+  Sparkles,
+} from "lucide-react";
 import FunDashboard from "@/app/__components/idea-board/funDashboard";
 import { LoadingOverlay } from "@/app/__components/ui/loadingOverlay";
 import NotebookPad from "@/app/__components/idea-board/notebookPad";
@@ -80,6 +86,8 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
 
   const boardContentRef = useRef<HTMLDivElement>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [isStickyStackOpen, setIsStickyStackOpen] = useState(true);
+  const [isBoardToolsOpen, setIsBoardToolsOpen] = useState(true);
 
   const EXPORT_PADDING = 40;
 
@@ -173,12 +181,35 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
       </section>
 
       <section className="relative left-1/2 right-1/2 mx-[-50vw] w-screen px-4 sm:px-6 lg:px-8">
-        <div className="grid items-start gap-3 lg:grid-cols-[184px_minmax(0,1fr)] lg:pr-80">
+        <div
+          className={[
+            "grid items-start gap-3",
+            isStickyStackOpen
+              ? "lg:grid-cols-[184px_minmax(0,1fr)]"
+              : "lg:grid-cols-[52px_minmax(0,1fr)]",
+            isBoardToolsOpen ? "lg:pr-80" : "",
+          ].join(" ")}
+        >
           <aside
             className="tf-board-sidepanel tf-animate-in rounded-2xl border border-slate-200 bg-slate-100 p-2.5 lg:self-stretch"
             style={{ animationDelay: "60ms" }}
           >
-            <NotebookPad onNoteToolDragStart={onNoteToolDragStart} />
+            {isStickyStackOpen ? (
+              <NotebookPad
+                onNoteToolDragStart={onNoteToolDragStart}
+                onCollapse={() => setIsStickyStackOpen(false)}
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsStickyStackOpen(true)}
+                className="flex w-full items-center justify-center rounded-lg border border-slate-300 bg-white p-1.5 text-slate-600 shadow-sm transition hover:text-slate-900"
+                aria-label="Show sticky stack"
+                title="Show sticky stack"
+              >
+                <PanelLeftOpen size={18} aria-hidden />
+              </button>
+            )}
           </aside>
 
           <div
@@ -454,27 +485,41 @@ export default function IdeaBoard({ idea }: IdeaBoardProps) {
           </div>
         </div>
       </section>
-      <FunDashboard
-        isAdminMode={isAdminMode}
-        isPinMode={isPinMode}
-        pinnedNoteIds={pinnedNoteIds}
-        notes={notes}
-        summaryPreview={summaryPreview}
-        postedDecisionId={postedDecisionId}
-        plannedIdeasHref={`/planned-ideas?ideaId=${idea.id}`}
-        selectedTextItem={selectedTextItem}
-        selectedShapeItem={selectedShapeItem}
-        selectedTool={selectedBoardTool}
-        isGeneratingGuide={isGeneratingGuide}
-        isConnectMode={isConnectMode}
-        connectFromItem={connectFromItem}
-        onTogglePinMode={togglePinMode}
-        onGenerateSummary={generateSummaryPreview}
-        onSelectTool={selectBoardTool}
-        onChangeTextStyle={updateSelectedTextStyle}
-        onChangeShapeStyle={updateSelectedShapeStyle}
-        onToggleConnectMode={toggleConnectMode}
-      />
+      {isBoardToolsOpen ? null : (
+        <button
+          type="button"
+          onClick={() => setIsBoardToolsOpen(true)}
+          className="fixed right-4 top-28 z-30 hidden items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-700 shadow-md transition hover:text-slate-950 lg:inline-flex"
+          aria-label="Show board tools"
+        >
+          <PanelRightOpen size={16} aria-hidden />
+          Board tools
+        </button>
+      )}
+      {isBoardToolsOpen ? (
+        <FunDashboard
+          onCollapse={() => setIsBoardToolsOpen(false)}
+          isAdminMode={isAdminMode}
+          isPinMode={isPinMode}
+          pinnedNoteIds={pinnedNoteIds}
+          notes={notes}
+          summaryPreview={summaryPreview}
+          postedDecisionId={postedDecisionId}
+          plannedIdeasHref={`/planned-ideas?ideaId=${idea.id}`}
+          selectedTextItem={selectedTextItem}
+          selectedShapeItem={selectedShapeItem}
+          selectedTool={selectedBoardTool}
+          isGeneratingGuide={isGeneratingGuide}
+          isConnectMode={isConnectMode}
+          connectFromItem={connectFromItem}
+          onTogglePinMode={togglePinMode}
+          onGenerateSummary={generateSummaryPreview}
+          onSelectTool={selectBoardTool}
+          onChangeTextStyle={updateSelectedTextStyle}
+          onChangeShapeStyle={updateSelectedShapeStyle}
+          onToggleConnectMode={toggleConnectMode}
+        />
+      ) : null}
     </div>
   );
 }
